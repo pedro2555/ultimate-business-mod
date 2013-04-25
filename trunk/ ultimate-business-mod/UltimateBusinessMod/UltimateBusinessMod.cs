@@ -9,6 +9,23 @@ namespace UltimateBusinessMod
 {
     public class UltimateBusinessMod : Script
     {
+        
+
+        #region database functions
+        /// <summary>
+        /// Checks scripts folder for UltimateBusinessMod.s3db
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckForDatabase()
+        {
+            if (!File.Exists(Game.InstallFolder + "\\scripts\\" + Settings.GetValueString("databasefile", "GENERAL", "UltimateBusinessMod.s3db")))
+                return false;
+            else
+                Database.SetDatabase(Game.InstallFolder + "\\scripts\\" + Settings.GetValueString("databasefile", "GENERAL", "UltimateBusinessMod.s3db"));
+            return true;
+        }
+        #endregion
+
         #region log functions
         /// <summary>
         /// Get os name and SP
@@ -128,16 +145,50 @@ namespace UltimateBusinessMod
         }
         #endregion
 
+        PropertyType[] PropertyTypes;
+        Property[] Properties;
+
         /// <summary>
         /// The script entry point
         /// </summary>
         public UltimateBusinessMod()
         {
+            // check for database file
+            if (!CheckForDatabase())
+            {
+                Game.DisplayText("Ultimate Business Mod Database file could not be found. Please re-install the mod.", 3000);
+                Wait(3000);
+                Abort();
+            }
+
             // Log script start
             Log("UltimateBusinessMod", "Started under GTA " + Game.Version.ToString());
             Log("UltimateBusinessMod", "dsound.dll " + ((File.Exists(Game.InstallFolder + "\\dsound.dll")) ? "present" : "not present"));
             Log("UltimateBusinessMod", "xlive.dll " + ((File.Exists(Game.InstallFolder + "\\xlive.dll")) ? "present" : "not present"));
             Log("UltimateBusinessMod", "OS Version: " + getOSInfo());
+
+            Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
+            Game.Pause();
+
+            PropertyTypes = PropertyType.GetTypesList();
+            Properties = Property.GetPropertiesList();
+
+            foreach (Property p in Properties)
+            {
+                Blip temp = Blip.AddBlip(p.Location);
+                temp.Name = p.Name;
+                temp.Display = BlipDisplay.ArrowAndMap; // Maybe better as BlipDisplay.ArrowOnly
+                temp.Friendly = true;
+                temp.Icon = (BlipIcon)80;
+                temp.RouteActive = false;
+                temp.ShowOnlyWhenNear = true;
+                temp.Transparency = .5f;
+            }
+
+            Game.Unpause();
+            Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
         }
+
+
     }
 }
