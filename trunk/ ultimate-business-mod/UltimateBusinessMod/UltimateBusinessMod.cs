@@ -207,16 +207,23 @@ namespace UltimateBusinessMod
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
 
-            action_key_timer = new System.Timers.Timer(10);
+            action_key_timer = new System.Timers.Timer(75);
             action_key_timer.Elapsed += new System.Timers.ElapsedEventHandler(action_key_timer_Elapsed);
             action_key_timer.Start();
         }
 
         void action_key_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (Game.isGameKeyPressed(GameKey.Action))
+            try
             {
-                Game.DisplayText("Press", 15);
+                if (Game.isGameKeyPressed(GameKey.Action))
+                {
+                    Log("Key Press Handler", "Action Key Pressed");
+                }
+            }
+            catch (Exception crap)
+            {
+                Log("action_key_timer_Elapsed", crap.Message);
             }
         }
 
