@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
+    <Compile Include="LogFile.cs" />
     <Compile Include="Property.cs" />
     <Compile Include="PropertyType.cs" />
     <Compile Include="UltimateBusinessMod.cs" />
