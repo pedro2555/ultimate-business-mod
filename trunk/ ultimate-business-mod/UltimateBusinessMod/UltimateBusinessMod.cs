@@ -198,12 +198,8 @@ namespace UltimateBusinessMod
             //Game.Unpause();
             Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
 
-            try
-            {
-                this.Interval = 5000;
-                this.Tick += new EventHandler(UltimateBusinessMod_Tick);
-            }
-            catch (Exception crap) { Log("PropertyProximity initialization", crap.Message); }
+            this.Interval = 1000;
+            this.Tick += new EventHandler(UltimateBusinessMod_Tick);
         }
 
         void UltimateBusinessMod_Tick(object sender, EventArgs e)
@@ -214,11 +210,7 @@ namespace UltimateBusinessMod
                 {
                     if (Player.Character.Position.DistanceTo(p.Location) <= 3.0f)
                     {
-                        GTA.Native.Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW",
-                            "STRING",
-                            String.Format("{0} is selling for {1}$", p.Name, p.Cost),
-                            1500,
-                            true);
+                        GTA.Native.Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", String.Format("{0} is selling for {1}$", p.Name, p.Cost), 1100, true);
                     }
                 }
                 catch (Exception crap) { Log("PropertyProximity_Tick", crap.Message); }
