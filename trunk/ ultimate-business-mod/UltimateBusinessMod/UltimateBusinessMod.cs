@@ -168,6 +168,8 @@ namespace UltimateBusinessMod
             Log("UltimateBusinessMod", "xlive.dll " + ((File.Exists(Game.InstallFolder + "\\xlive.dll")) ? "present" : "not present"));
             Log("UltimateBusinessMod", "OS Version: " + getOSInfo());
 
+            Wait(3000);
+
             Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
             //Game.Pause();
 
@@ -176,14 +178,18 @@ namespace UltimateBusinessMod
 
             foreach (Property p in Properties)
             {
-                Blip b = GTA.Blip.AddBlip(p.Location);
-                b.Icon = (BlipIcon)0; // 0 and 80
-                b.Name = p.Name;
-                b.Display = BlipDisplay.ArrowAndMap;
-                b.Friendly = true;
-                b.RouteActive = false;
-                b.ShowOnlyWhenNear = true;
-                b.Scale = .7f;
+                try
+                {
+                    GTA.Object apple = World.CreateObject(new Model("amb_apple_1"), p.Location);
+                    apple.Visible = false;
+                    apple.Collision = false;
+                    Blip b = apple.AttachBlip();
+                    b.Icon = (BlipIcon)0;
+                    b.Name = p.Name;
+                    b.Scale = .7f;
+                    b.ShowOnlyWhenNear = true;
+                }
+                catch (Exception crap) { Log("construct - foreach - blip drawing", crap.Message); }
             }
 
             //Game.Unpause();
