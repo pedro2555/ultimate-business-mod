@@ -200,7 +200,7 @@ namespace UltimateBusinessMod
 
             try
             {
-                this.Interval = 1000;
+                this.Interval = 5000;
                 this.Tick += new EventHandler(UltimateBusinessMod_Tick);
             }
             catch (Exception crap) { Log("PropertyProximity initialization", crap.Message); }
