@@ -9,7 +9,10 @@ namespace UltimateBusinessMod
 {
     public class UltimateBusinessMod : Script
     {
+        #region internal use properties
+
         
+        #endregion
 
         #region database functions
         /// <summary>
@@ -195,18 +198,31 @@ namespace UltimateBusinessMod
             //Game.Unpause();
             Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
 
-            this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_PerFrameDrawing);
+            try
+            {
+                this.Interval = 1000;
+                this.Tick += new EventHandler(UltimateBusinessMod_Tick);
+            }
+            catch (Exception crap) { Log("PropertyProximity initialization", crap.Message); }
         }
 
-        void UltimateBusinessMod_PerFrameDrawing(object sender, GraphicsEventArgs e)
+        void UltimateBusinessMod_Tick(object sender, EventArgs e)
         {
-            GTA.Native.Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW",
-                "STRING",
-                String.Format("x:{0} y:{1} z:{2}", Player.Character.Position.X, Player.Character.Position.Y, Player.Character.Position.Z),
-                10,
-                true);
+            foreach (Property p in Properties)
+            {
+                try
+                {
+                    if (Player.Character.Position.DistanceTo(p.Location) <= 3.0f)
+                    {
+                        GTA.Native.Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                            "STRING",
+                            String.Format("{0} is selling for {1}$", p.Name, p.Cost),
+                            1500,
+                            true);
+                    }
+                }
+                catch (Exception crap) { Log("PropertyProximity_Tick", crap.Message); }
+            }
         }
-
-
     }
 }
