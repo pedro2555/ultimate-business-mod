@@ -68,6 +68,7 @@
     <Content Include="System.Data.SQLite.dll" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Development Data\Database\Table Properties.xlsx" />
     <None Include="Development Data\UltimateBusinessModDatabaseScheme.xls" />
     <None Include="UltimateBusinessMod.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
