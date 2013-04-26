@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using GTA;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace UltimateBusinessMod
 {
@@ -148,7 +150,6 @@ namespace UltimateBusinessMod
         }
         #endregion
 
-        PropertyType[] PropertyTypes;
         Property[] Properties;
 
         /// <summary>
@@ -156,6 +157,7 @@ namespace UltimateBusinessMod
         /// </summary>
         public UltimateBusinessMod()
         {
+            #region check for database file, abort script if not found
             LogFile.Path = Game.InstallFolder + "\\scripts\\UltimateBusinessMod.log";
             // check for database file
             if (!CheckForDatabase())
@@ -164,21 +166,25 @@ namespace UltimateBusinessMod
                 Wait(3000);
                 Abort();
             }
-
+            #endregion
+            #region logging script start
             // Log script start
-            Log("UltimateBusinessMod", "Started under GTA " + Game.Version.ToString());
-            Log("UltimateBusinessMod", "dsound.dll " + ((File.Exists(Game.InstallFolder + "\\dsound.dll")) ? "present" : "not present"));
-            Log("UltimateBusinessMod", "xlive.dll " + ((File.Exists(Game.InstallFolder + "\\xlive.dll")) ? "present" : "not present"));
-            Log("UltimateBusinessMod", "OS Version: " + getOSInfo());
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Game.InstallFolder + "\\scripts\\UltimateBusinessMod.net.dll");
+            string version = fvi.FileVersion;
+            Log("UltimateBusinessModv" + version, "Started under GTA " + Game.Version.ToString());
+            Log("UltimateBusinessModv" + version, "dsound.dll " + ((File.Exists(Game.InstallFolder + "\\dsound.dll")) ? "present" : "not present"));
+            Log("UltimateBusinessModv" + version, "xlive.dll " + ((File.Exists(Game.InstallFolder + "\\xlive.dll")) ? "present" : "not present"));
+            Log("UltimateBusinessModv" + version, "OS Version: " + getOSInfo());
+            #endregion
 
+            // wait for map to load
             Wait(3000);
 
+            // Start loading database records
             Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
-            //Game.Pause();
-
-            //PropertyTypes = PropertyType.GetTypesList();
             Properties = Property.GetPropertiesList();
-
+            // create blips for each property
             foreach (Property p in Properties)
             {
                 try
@@ -187,7 +193,7 @@ namespace UltimateBusinessMod
                     apple.Visible = false;
                     apple.Collision = false;
                     Blip b = apple.AttachBlip();
-                    b.Icon = (BlipIcon)0;
+                    b.Icon = (p.Owned) ? (BlipIcon)80 : (BlipIcon)0;
                     b.Name = p.Name;
                     b.Scale = .7f;
                     b.ShowOnlyWhenNear = true;
@@ -200,21 +206,38 @@ namespace UltimateBusinessMod
 
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
+
+            
         }
 
         void UltimateBusinessMod_Tick(object sender, EventArgs e)
         {
-            foreach (Property p in Properties)
+            if (Game.isGameKeyPressed(GameKey.Action))
             {
-                try
-                {
+                Game.DisplayText("Press", 1000);
+            }
+            try
+            {
+                foreach (Property p in Properties)
                     if (Player.Character.Position.DistanceTo(p.Location) <= 3.0f)
-                    {
-                        GTA.Native.Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW", "STRING", String.Format("{0} is selling for {1}$", p.Name, p.Cost), 1100, true);
-                    }
-                }
-                catch (Exception crap) { Log("PropertyProximity_Tick", crap.Message); }
+                        if (!p.Owned)
+                            GTA.Native.Function.Call(
+                                "PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                                "STRING",
+                                String.Format("{0} is selling for {1:C}. Press {2} to buy it.", p.Name, p.Cost, "~INPUT_FRONTEND_LB~"),
+                                1100,
+                                true);
+                        else
+                        {
+
+                        }
+            }
+            catch (Exception crap)
+            {
+                Log("UltimateBusinessMod_Tick", crap.Message);
             }
         }
+
+        
     }
 }
