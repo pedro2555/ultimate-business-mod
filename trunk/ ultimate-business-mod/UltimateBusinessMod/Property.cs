@@ -18,7 +18,17 @@ namespace UltimateBusinessMod
             List<Property> res = new List<Property>();
             DataTable dt = Database.GetDataTable("SELECT * FROM Properties ORDER BY ID ASC");
             foreach (DataRow dtr in dt.Rows)
-                res.Add(new Property((int)dtr[0], (string)dtr[1], (string)dtr[2], (string)dtr[3], (int)dtr[4], (int)dtr[5], (int)dtr[6]));
+            {
+                try
+                {
+                    res.Add(new Property(Convert.ToInt32(dtr[0]), dtr[1].ToString(), dtr[2].ToString(), dtr[3].ToString(), Convert.ToInt32(dtr[4]), Convert.ToInt32(dtr[5]), Convert.ToInt32(dtr[6])));
+                }
+                catch (Exception crap)
+                {
+                    LogFile.Log("GetPropertiesList - foreach", String.Format("{0}, {1}, {2}, {3}, {4}, {5}, {6}",
+                        dtr[0].ToString(), dtr[1].ToString(), dtr[2].ToString(), dtr[3].ToString(), dtr[4].ToString(), dtr[5].ToString(), dtr[6].ToString()));
+                }
+            }
             return res.ToArray();
         }
 

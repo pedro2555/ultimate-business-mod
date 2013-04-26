@@ -153,6 +153,7 @@ namespace UltimateBusinessMod
         /// </summary>
         public UltimateBusinessMod()
         {
+            LogFile.Path = Game.InstallFolder + "\\scripts\\UltimateBusinessMod.log";
             // check for database file
             if (!CheckForDatabase())
             {
@@ -168,25 +169,36 @@ namespace UltimateBusinessMod
             Log("UltimateBusinessMod", "OS Version: " + getOSInfo());
 
             Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
-            Game.Pause();
+            //Game.Pause();
 
-            PropertyTypes = PropertyType.GetTypesList();
+            //PropertyTypes = PropertyType.GetTypesList();
             Properties = Property.GetPropertiesList();
 
             foreach (Property p in Properties)
             {
-                Blip temp = Blip.AddBlip(p.Location);
-                temp.Name = p.Name;
-                temp.Display = BlipDisplay.ArrowAndMap; // Maybe better as BlipDisplay.ArrowOnly
-                temp.Friendly = true;
-                temp.Icon = (BlipIcon)80;
-                temp.RouteActive = false;
-                temp.ShowOnlyWhenNear = true;
-                temp.Transparency = .5f;
+                Blip b = GTA.Blip.AddBlip(p.Location);
+                b.Icon = (BlipIcon)0; // 0 and 80
+                b.Name = p.Name;
+                b.Display = BlipDisplay.ArrowAndMap;
+                b.Friendly = true;
+                b.RouteActive = false;
+                b.ShowOnlyWhenNear = true;
+                b.Scale = .7f;
             }
 
-            Game.Unpause();
+            //Game.Unpause();
             Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
+
+            this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_PerFrameDrawing);
+        }
+
+        void UltimateBusinessMod_PerFrameDrawing(object sender, GraphicsEventArgs e)
+        {
+            GTA.Native.Function.Call("PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                "STRING",
+                String.Format("x:{0} y:{1} z:{2}", Player.Character.Position.X, Player.Character.Position.Y, Player.Character.Position.Z),
+                10,
+                true);
         }
 
 
