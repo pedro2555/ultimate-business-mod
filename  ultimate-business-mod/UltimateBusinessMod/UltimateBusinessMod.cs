@@ -12,7 +12,11 @@ namespace UltimateBusinessMod
     public class UltimateBusinessMod : Script
     {
         #region internal use properties
-
+        /// <summary>
+        /// Gets if the Property ID returned by the PropertyProximity
+        /// -1 if the player is not close to a property
+        /// </summary>
+        public static int ProximityPropertyID;
         
         #endregion
 
@@ -143,14 +147,14 @@ namespace UltimateBusinessMod
             finally
             {
 #if DEBUG
-                Game.DisplayText("Check UltimateBusinessMod.log - " + message, 3000);
+                Game.DisplayText("Check UltimateBusinessMod.log - " + message, 500);
 #endif
             }
 
         }
         #endregion
 
-        Property[] Properties;
+        public static Property[] Properties;
 
         /// <summary>
         /// The script entry point
@@ -179,7 +183,7 @@ namespace UltimateBusinessMod
             #endregion
 
             // wait for map to load
-            Wait(3000);
+            Wait(5000);
 
             // Start loading database records
             Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
@@ -207,10 +211,12 @@ namespace UltimateBusinessMod
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
 
-            action_key_timer = new System.Timers.Timer(75);
+            action_key_timer = new System.Timers.Timer(100);
             action_key_timer.Elapsed += new System.Timers.ElapsedEventHandler(action_key_timer_Elapsed);
-            action_key_timer.Start();
+            action_key_timer.Enabled = true;
         }
+
+        private GTA.Timer new_timer;
 
         void action_key_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -218,13 +224,17 @@ namespace UltimateBusinessMod
             {
                 if (Game.isGameKeyPressed(GameKey.Action))
                 {
-                    Log("Key Press Handler", "Action Key Pressed");
+                    if (ProximityPropertyID != -1)
+                    {
+                        Properties[ProximityPropertyID].Owned = true;
+
+                    }
+                    else Game.DisplayText("Failed", 1000);
+
+                    
                 }
             }
-            catch (Exception crap)
-            {
-                Log("action_key_timer_Elapsed", crap.Message);
-            }
+            catch (Exception) { }
         }
 
         System.Timers.Timer action_key_timer;
@@ -235,21 +245,33 @@ namespace UltimateBusinessMod
             {
                 foreach (Property p in Properties)
                     if (Player.Character.Position.DistanceTo(p.Location) <= 3.0f)
+                    {
                         if (!p.Owned)
+                        {
                             GTA.Native.Function.Call(
                                 "PRINT_STRING_WITH_LITERAL_STRING_NOW",
                                 "STRING",
                                 String.Format("{0} is selling for {1:C}. Press {2} to buy it.", p.Name, p.Cost, "~INPUT_FRONTEND_LB~"),
                                 1100,
                                 true);
+                        }
                         else
                         {
-
+                            GTA.Native.Function.Call(
+                                "PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                                "STRING",
+                                String.Format("Press {0} to check {1} datasheet", "~INPUT_FRONTEND_LB~", p.Name),
+                                1100,
+                                true);
                         }
+                        ProximityPropertyID = p.ID;
+                        return;
+                    }
+                ProximityPropertyID = -1;
             }
             catch (Exception crap)
             {
-                Log("UltimateBusinessMod_Tick", crap.Message);
+                //Log("UltimateBusinessMod_Tick", crap.Message);
             }
         }
 
