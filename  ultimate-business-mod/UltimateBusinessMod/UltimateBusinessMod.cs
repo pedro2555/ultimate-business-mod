@@ -216,8 +216,6 @@ namespace UltimateBusinessMod
             action_key_timer.Enabled = true;
         }
 
-        private GTA.Timer new_timer;
-
         void action_key_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             try
