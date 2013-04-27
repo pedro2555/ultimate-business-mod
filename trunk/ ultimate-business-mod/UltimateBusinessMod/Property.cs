@@ -70,7 +70,7 @@ namespace UltimateBusinessMod
         /// Gets if player owns the property
         /// </summary>
         public bool Owned
-        { get; private set; }
+        { get; set; }
         /// <summary>
         /// Gets if property should load a context mission on key press
         /// </summary>
