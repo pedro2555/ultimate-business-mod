@@ -83,7 +83,7 @@
   <PropertyGroup>
     <UseHostCompilerIfAvailable>False</UseHostCompilerIfAvailable>
     <PreBuildEvent>cd C:\Program Files\TortoiseSVN\bin
-SubWCRev "F:\Pedro\UltimateBusinessMod" "F:\Pedro\UltimateBusinessMod\UltimateBusinessMod\Properties\AssemblyInfo.tmpl" "F:\Pedro\UltimateBusinessMod\UltimateBusinessMod\Properties\AssemblyInfo.cs"</PreBuildEvent>
+SubWCRev "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod" "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod\UltimateBusinessMod\Properties\AssemblyInfo.tmpl" "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod\UltimateBusinessMod\Properties\AssemblyInfo.cs"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
