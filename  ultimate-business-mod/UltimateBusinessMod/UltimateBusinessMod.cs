@@ -13,6 +13,11 @@ namespace UltimateBusinessMod
     {
         #region internal use properties
         /// <summary>
+        /// All 15 mission complete audio ids
+        /// TRIGGER_MISSION_COMPLETE_AUDIO
+        /// </summary>
+        internal int[] buy_audio_list = { 6, 7, 10, 11, 15, 18, 24, 25, 27, 28, 33, 34, 35, 42, 43, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 71 };
+        /// <summary>
         /// Gets if the Property ID returned by the PropertyProximity
         /// -1 if the player is not close to a property
         /// </summary>
@@ -201,8 +206,9 @@ namespace UltimateBusinessMod
                     b.Name = p.Name;
                     b.Scale = .7f;
                     b.ShowOnlyWhenNear = true;
+                    p.blip = b;
                 }
-                catch (Exception crap) { Log("construct - foreach - blip drawing", crap.Message); }
+                catch (Exception crap) { /* Log("construct - foreach - blip drawing", crap.Message);*/ }
             }
 
             //Game.Unpause();
@@ -210,69 +216,70 @@ namespace UltimateBusinessMod
 
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
-
-            action_key_timer = new System.Timers.Timer(100);
-            action_key_timer.Elapsed += new System.Timers.ElapsedEventHandler(action_key_timer_Elapsed);
-            action_key_timer.Enabled = true;
+#if DEBUG
+            this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_PerFrameDrawing);
+#endif
         }
 
-        void action_key_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        void UltimateBusinessMod_PerFrameDrawing(object sender, GraphicsEventArgs e)
         {
-            try
-            {
-                if (Game.isGameKeyPressed(GameKey.Action))
-                {
-                    if (ProximityPropertyID != -1)
-                    {
-                        Properties[ProximityPropertyID].Owned = true;
-
-                    }
-                    else Game.DisplayText("Failed", 1000);
-
-                    
-                }
-            }
-            catch (Exception) { }
+            e.Graphics.Scaling = FontScaling.ScreenUnits;
+            e.Graphics.DrawText(Game.FPS.ToString(), .9f, .87f);
+            e.Graphics.DrawText(ProximityPropertyID.ToString(), .9f, .9f);
         }
-
-        System.Timers.Timer action_key_timer;
 
         void UltimateBusinessMod_Tick(object sender, EventArgs e)
         {
-            try
+            // Key handler
+            if (ProximityPropertyID != -1 && Game.isGameKeyPressed(GameKey.Action))
             {
-                foreach (Property p in Properties)
-                    if (Player.Character.Position.DistanceTo(p.Location) <= 3.0f)
-                    {
-                        if (!p.Owned)
-                        {
-                            GTA.Native.Function.Call(
+                Player.Character.Task.ClearAllImmediately();
+                if (!Properties[ProximityPropertyID].Owned)
+                {
+                    Properties[ProximityPropertyID].Owned = true;
+                    Properties[ProximityPropertyID].blip.Icon = (BlipIcon)80;
+                    Properties[ProximityPropertyID].blip.Name = Properties[ProximityPropertyID].Name;
+                    Properties[ProximityPropertyID].UpdateFlags();
+                    GTA.Native.Function.Call("TRIGGER_MISSION_COMPLETE_AUDIO", buy_audio_list[new Random().Next(0, buy_audio_list.Length)]);
+                    GTA.Native.Function.Call(
                                 "PRINT_STRING_WITH_LITERAL_STRING_NOW",
                                 "STRING",
-                                String.Format("{0} is selling for {1:C}. Press {2} to buy it.", p.Name, p.Cost, "~INPUT_FRONTEND_LB~"),
+                                String.Format("You have just bought {0} for {1:C}", Properties[ProximityPropertyID].Name, Properties[ProximityPropertyID].Cost),
                                 1100,
                                 true);
-                        }
-                        else
-                        {
-                            GTA.Native.Function.Call(
-                                "PRINT_STRING_WITH_LITERAL_STRING_NOW",
-                                "STRING",
-                                String.Format("Press {0} to check {1} datasheet", "~INPUT_FRONTEND_LB~", p.Name),
-                                1100,
-                                true);
-                        }
-                        ProximityPropertyID = p.ID;
-                        return;
-                    }
-                ProximityPropertyID = -1;
+                }
+                else
+                {
+
+                }
             }
-            catch (Exception crap)
+            // Proximity detection
+            foreach (Property p in Properties)
             {
-                //Log("UltimateBusinessMod_Tick", crap.Message);
+                if (Game.isGameKeyPressed(GameKey.Action))
+                    return;
+                if (p.Ownable && Player.Character.Position.DistanceTo2D(p.Location) < 3)
+                {
+                    ProximityPropertyID = p.ID - 1;
+                    if (!p.Owned)
+                        GTA.Native.Function.Call(
+                            "PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                            "STRING",
+                            String.Format("Hold {0} to buy {1} for {2:C}","~INPUT_FRONTEND_LB~", p.Name, p.Cost),
+                            1100,
+                            true);
+                    else
+                        GTA.Native.Function.Call(
+                            "PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                            "STRING",
+                            String.Format("Hold {0} to open {1}'s manager", "~INPUT_FRONTEND_LB~", p.Name),
+                            1100,
+                            true);
+                    return;
+                }
             }
+            ProximityPropertyID = -1;
         }
 
-        
     }
 }
