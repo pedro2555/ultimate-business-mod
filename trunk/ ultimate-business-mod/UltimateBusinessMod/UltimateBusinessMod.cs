@@ -11,6 +11,17 @@ namespace UltimateBusinessMod
 {
     public class UltimateBusinessMod : Script
     {
+        internal void Msg(string message, int time)
+        {
+            GTA.Native.Function.Call(
+                "PRINT_STRING_WITH_LITERAL_STRING_NOW",
+                "STRING",
+                message,
+                time,
+                true);
+        }
+
+
         #region internal use properties
         /// <summary>
         /// All 15 mission complete audio ids
@@ -230,27 +241,29 @@ namespace UltimateBusinessMod
 
         void UltimateBusinessMod_Tick(object sender, EventArgs e)
         {
+            // check enviroment state, player in combat, in water, dead, in vehicle, etc..
+            if (Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
+                return;
             // Key handler
             if (ProximityPropertyID != -1 && Game.isGameKeyPressed(GameKey.Action))
             {
-                Player.Character.Task.ClearAllImmediately();
-                if (!Properties[ProximityPropertyID].Owned)
+                if (!Properties[ProximityPropertyID].Owned && Player.Money >= Properties[ProximityPropertyID].Cost)
                 {
+                    Player.Character.Task.ClearAllImmediately();
                     Properties[ProximityPropertyID].Owned = true;
                     Properties[ProximityPropertyID].blip.Icon = (BlipIcon)80;
                     Properties[ProximityPropertyID].blip.Name = Properties[ProximityPropertyID].Name;
                     Properties[ProximityPropertyID].UpdateFlags();
                     GTA.Native.Function.Call("TRIGGER_MISSION_COMPLETE_AUDIO", buy_audio_list[new Random().Next(0, buy_audio_list.Length)]);
-                    GTA.Native.Function.Call(
-                                "PRINT_STRING_WITH_LITERAL_STRING_NOW",
-                                "STRING",
-                                String.Format("You have just bought {0} for {1:C}", Properties[ProximityPropertyID].Name, Properties[ProximityPropertyID].Cost),
-                                1100,
-                                true);
+                    Msg(String.Format("You have just bought {0} for {1:C}", Properties[ProximityPropertyID].Name, Properties[ProximityPropertyID].Cost), 1100);
+                    GTA.Native.Function.Call("DISPLAY_CASH", true);
+#if !DEBUG
+                    Player.Money -= Properties[ProximityPropertyID].Cost;
+#endif
                 }
-                else
+                else if (!Properties[ProximityPropertyID].Owned && Player.Money < Properties[ProximityPropertyID].Cost)
                 {
-
+                    Msg(String.Format("You require {0:C} to buy {1}", Properties[ProximityPropertyID].Cost, Properties[ProximityPropertyID].Name), 1100);
                 }
             }
             // Proximity detection
@@ -262,19 +275,12 @@ namespace UltimateBusinessMod
                 {
                     ProximityPropertyID = p.ID - 1;
                     if (!p.Owned)
-                        GTA.Native.Function.Call(
-                            "PRINT_STRING_WITH_LITERAL_STRING_NOW",
-                            "STRING",
-                            String.Format("Hold {0} to buy {1} for {2:C}","~INPUT_FRONTEND_LB~", p.Name, p.Cost),
-                            1100,
-                            true);
+                        if (Player.Money <= p.Cost)
+                            Msg(String.Format("You require {0:C} to buy {1}", p.Cost, p.Name), 1100);
+                        else
+                            Msg(String.Format("Hold {0} to buy {1} for {2:C}", "~INPUT_FRONTEND_LB~", p.Name, p.Cost), 1100);
                     else
-                        GTA.Native.Function.Call(
-                            "PRINT_STRING_WITH_LITERAL_STRING_NOW",
-                            "STRING",
-                            String.Format("Hold {0} to open {1}'s manager", "~INPUT_FRONTEND_LB~", p.Name),
-                            1100,
-                            true);
+                        Msg(String.Format("Hold {0} to open {1}'s manager", "~INPUT_FRONTEND_LB~", p.Name), 1100);
                     return;
                 }
             }
