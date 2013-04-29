@@ -105,6 +105,7 @@ namespace UltimateBusinessMod
             }
             try
             {
+                LogFile.Log("DB_update", String.Format("update {0} set {1} where {2};", tableName, vals, where));
                 Database.ExecuteNonQuery(String.Format("update {0} set {1} where {2};", tableName, vals, where));
             }
             catch

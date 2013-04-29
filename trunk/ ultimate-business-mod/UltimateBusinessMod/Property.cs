@@ -38,12 +38,13 @@ namespace UltimateBusinessMod
             this.Name = Name;
             string[] location_array = Location.Split(',');
             this.Location = new Vector3(Convert.ToSingle(location_array[0]), Convert.ToSingle(location_array[1]), Convert.ToSingle(location_array[2]));
-            this.Ownable = (Flags[0] == 1) ? true : false;
-            this.Owned = (Flags[1] == 1) ? true : false;
-            this.HasContextMission = (Flags[2] == 1) ? true : true;
+            this.Ownable = (Flags[0] == '1') ? true : false;
+            this.Owned = (Flags[1] == '1') ? true : false;
+            this.HasContextMission = (Flags[2] == '1') ? true : false;
             this.StaffCount = Staff;
             this.StaffCap = StaffCap;
             this.Cost = Cost;
+            LogFile.Log("DB_select_flags", Flags);
         }
 
         /// <summary>
@@ -52,8 +53,14 @@ namespace UltimateBusinessMod
         public int ID
         { get; private set; }
         /// <summary>
+        /// Game map blip
+        /// </summary>
+        public Blip blip
+        { get; set; }
+        /// <summary>
         /// Gets property name, used to reference the property in-game
         /// </summary>
+        /// 
         public string Name
         { get; private set; }
         /// <summary>
@@ -91,5 +98,17 @@ namespace UltimateBusinessMod
         /// </summary>
         public int Cost
         { get; private set; }
+
+        /// <summary>
+        /// Writes instance flags to correspondent database field
+        /// </summary>
+        public void UpdateFlags()
+        {
+            Dictionary<string, string> data = new Dictionary<string,string>();
+            string data_s = String.Format("{0}{1}{2}", ((Ownable) ? "1" : "0"), ((Owned) ? "1" : "0"), ((HasContextMission) ? "1" : "0"));
+            data.Add("Flags", data_s);
+            LogFile.Log("UpdateFlags", data_s); 
+            Database.Update("Properties", data, String.Format("ID={0}", this.ID));
+        }
     }
 }
