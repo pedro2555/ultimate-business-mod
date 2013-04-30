@@ -21,18 +21,17 @@ namespace UltimateBusinessMod
             {
                 try
                 {
-                    res.Add(new Property(Convert.ToInt32(dtr[0]), dtr[1].ToString(), dtr[2].ToString(), dtr[3].ToString(), Convert.ToInt32(dtr[4]), Convert.ToInt32(dtr[5]), Convert.ToInt32(dtr[6])));
+                    res.Add(new Property(Convert.ToInt32(dtr[0]), dtr[1].ToString(), dtr[2].ToString(), dtr[3].ToString(), Convert.ToInt32(dtr[4]), Convert.ToInt32(dtr[5]), Convert.ToInt32(dtr[6]), Convert.ToInt32(dtr[7]), Convert.ToInt32(dtr[8]), Convert.ToInt32(dtr[9]), Convert.ToInt32(dtr[10]), Convert.ToInt32(dtr[11]), Convert.ToInt32(dtr[12])));
                 }
                 catch (Exception crap)
                 {
-                    LogFile.Log("GetPropertiesList - foreach", String.Format("{0}, {1}, {2}, {3}, {4}, {5}, {6}",
-                        dtr[0].ToString(), dtr[1].ToString(), dtr[2].ToString(), dtr[3].ToString(), dtr[4].ToString(), dtr[5].ToString(), dtr[6].ToString()));
+                    LogFile.Log("GetPropertiesList", "foreach");
                 }
             }
             return res.ToArray();
         }
 
-        private Property(int ID, string Name, string Location, string Flags, int Staff, int StaffCap, int Cost)
+        private Property(int ID, string Name, string Location, string Flags, int Staff, int StaffCap, int Cost, int IncomeMin, int IncomeMax, int StaffSal, int StaffPay, int Income, int TypeID)
         {
             this.ID = ID;
             this.Name = Name;
@@ -44,7 +43,13 @@ namespace UltimateBusinessMod
             this.StaffCount = Staff;
             this.StaffCap = StaffCap;
             this.Cost = Cost;
-            LogFile.Log("DB_select_flags", Flags);
+            this.IncomeMin = IncomeMin;
+            this.IncomeMax = IncomeMax;
+            this.StaffSal = StaffSal;
+            this.StaffPay = StaffPay;
+            this.Income = Income;
+            this.TypeID = TypeID;
+            LogFile.Log("DB_select", Flags);
         }
 
         /// <summary>
@@ -60,7 +65,6 @@ namespace UltimateBusinessMod
         /// <summary>
         /// Gets property name, used to reference the property in-game
         /// </summary>
-        /// 
         public string Name
         { get; private set; }
         /// <summary>
@@ -98,6 +102,36 @@ namespace UltimateBusinessMod
         /// </summary>
         public int Cost
         { get; private set; }
+        /// <summary>
+        /// Per staff member income min
+        /// </summary>
+        public int IncomeMin
+        { get; private set; }
+        /// <summary>
+        /// Per staff member income max
+        /// </summary>
+        public int IncomeMax
+        { get; private set; }
+        /// <summary>
+        /// Salary per staff member
+        /// </summary>
+        public int StaffSal
+        { get; private set; }
+        /// <summary>
+        /// Staff hire up front pay
+        /// </summary>
+        public int StaffPay
+        { get; private set; }
+        /// <summary>
+        /// Total income to collect
+        /// </summary>
+        public int Income
+        { get; set; }
+        /// <summary>
+        /// ID of PropertyType
+        /// </summary>
+        public int TypeID
+        { get; private set; }
 
         /// <summary>
         /// Writes instance flags to correspondent database field
@@ -109,6 +143,44 @@ namespace UltimateBusinessMod
             data.Add("Flags", data_s);
             LogFile.Log("UpdateFlags", data_s); 
             Database.Update("Properties", data, String.Format("ID={0}", this.ID));
+        }
+        /// <summary>
+        /// Adds one staff member if possible
+        /// 
+        /// returns true on successful insertion, false otherwise
+        /// </summary>
+        /// <returns></returns>
+        public bool AddStaff()
+        {
+            if (this.StaffCount >= this.StaffCap)
+                return false;
+            this.StaffCount++;
+            Dictionary<string, string> data = new Dictionary<string, string>();
+            string data_s = this.StaffCount.ToString();
+            data.Add("Staff", data_s);
+            LogFile.Log("AddStaff", data_s);
+            Database.Update("Properties", data, String.Format("ID={0}", this.ID));
+
+            return true;
+        }
+        /// <summary>
+        /// Removes one staff member if possible
+        /// 
+        /// returns true on successful insertion, false otherwise
+        /// </summary>
+        /// <returns></returns>
+        public bool RemoveStaff()
+        {
+            if (this.StaffCount == 0)
+                return false;
+            this.StaffCount--;
+            Dictionary<string, string> data = new Dictionary<string, string>();
+            string data_s = this.StaffCount.ToString();
+            data.Add("Staff", data_s);
+            LogFile.Log("AddStaff", data_s);
+            Database.Update("Properties", data, String.Format("ID={0}", this.ID));
+
+            return true;
         }
     }
 }

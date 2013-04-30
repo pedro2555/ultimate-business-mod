@@ -58,6 +58,9 @@
     <Compile Include="Database.cs" />
     <Compile Include="LogFile.cs" />
     <Compile Include="Property.cs" />
+    <Compile Include="PropertyManagerForm.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PropertyType.cs" />
     <Compile Include="UltimateBusinessMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
