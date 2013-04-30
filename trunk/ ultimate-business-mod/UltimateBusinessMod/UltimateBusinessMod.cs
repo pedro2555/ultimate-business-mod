@@ -11,13 +11,6 @@ namespace UltimateBusinessMod
 {
     public class UltimateBusinessMod : Script
     {
-        #region testing ground
-
-        GTA.Forms.Form PropertyManager;
-
-        #endregion
-
-
         #region internal use functions
         internal void Msg(string message, int time)
         {
@@ -71,11 +64,6 @@ namespace UltimateBusinessMod
         /// </summary>
         public UltimateBusinessMod()
         {
-            PropertyManager = new GTA.Forms.Form();
-            PropertyManager.Size = Game.Resolution;
-            PropertyManager.BackColor = System.Drawing.Color.Black;
-            PropertyManager.Transparency = .7f;
-
             #region property init
             ProximityPropertyID = -1;
             isManagerOpen = false;
@@ -209,8 +197,6 @@ namespace UltimateBusinessMod
                     ///
                     /// Open Property Manager
                     ///
-
-                    PropertyManager.Show();
                 }
             }
             // Proximity detection
