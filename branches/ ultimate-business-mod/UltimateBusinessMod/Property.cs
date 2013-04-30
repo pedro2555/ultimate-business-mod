@@ -49,7 +49,7 @@ namespace UltimateBusinessMod
             this.StaffPay = StaffPay;
             this.Income = Income;
             this.TypeID = TypeID;
-            LogFile.Log("DB_select_flags", Flags);
+            LogFile.Log("DB_select", Flags);
         }
 
         /// <summary>

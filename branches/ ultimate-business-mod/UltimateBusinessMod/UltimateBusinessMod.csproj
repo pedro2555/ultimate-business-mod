@@ -78,7 +78,9 @@
     <None Include="UltimateBusinessMod.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="UltimateBusinessMod.s3db" />
+    <None Include="UltimateBusinessMod.s3db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
