@@ -39,7 +39,17 @@ namespace UltimateBusinessMod
         /// </summary>
         public static bool isManagerOpen
         { get; set; }
-        
+
+        /// <summary>
+        /// Property Manager Form
+        /// </summary>
+        public GTA.Forms.Form PropertyManagerFrm;
+
+        public GTA.Forms.Label WorkersDisplayLabel;
+
+        public GTA.Forms.Button AddWorker;
+
+        public GTA.Forms.Button RemoveWorker;
         #endregion
 
         #region database functions
@@ -66,8 +76,6 @@ namespace UltimateBusinessMod
         {
             #region property init
             ProximityPropertyID = -1;
-            isManagerOpen = false;
-
             #endregion
             #region check for database file, abort script if not found
             LogFile.Path = Game.InstallFolder + "\\scripts\\UltimateBusinessMod.log";
@@ -121,6 +129,35 @@ namespace UltimateBusinessMod
             Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
             #endregion
 
+            #region initialize Manager form data
+
+            isManagerOpen = false;
+            PropertyManagerFrm = new GTA.Forms.Form();
+            PropertyManagerFrm.Size = Game.Resolution;
+            PropertyManagerFrm.TitleBackColor = System.Drawing.Color.FromArgb(200, 0, 0, 0);
+            PropertyManagerFrm.BackColor = System.Drawing.Color.FromArgb(150, 0, 0, 0);
+            PropertyManagerFrm.Location = new System.Drawing.Point(0, 0);
+            PropertyManagerFrm.Closed += new EventHandler(PropertyManagerFrm_Closed);
+            // Workers label
+            WorkersDisplayLabel = new GTA.Forms.Label();
+            PropertyManagerFrm.Controls.Add(WorkersDisplayLabel);
+            WorkersDisplayLabel.Location = new System.Drawing.Point(30, 30);
+            WorkersDisplayLabel.Size = new System.Drawing.Size(175, 20);
+            // Add Worker Button
+            AddWorker = new GTA.Forms.Button();
+            AddWorker.Size = new System.Drawing.Size(100, 20);
+            AddWorker.Location = new System.Drawing.Point(200, 30);
+            AddWorker.Text = "Hire worker";
+            PropertyManagerFrm.Controls.Add(AddWorker);
+            // Remove Worker Button
+            RemoveWorker = new GTA.Forms.Button();
+            RemoveWorker.Size = new System.Drawing.Size(100, 20);
+            RemoveWorker.Location = new System.Drawing.Point(305, 30);
+            RemoveWorker.Text = "Fire worker";
+            PropertyManagerFrm.Controls.Add(RemoveWorker);
+            #endregion
+
+
             // start our one second timer, let's see how it proves itself with more db records
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
@@ -130,6 +167,17 @@ namespace UltimateBusinessMod
 #if DEBUG
             this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_DebugPerFrameDrawing);
 #endif
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void PropertyManagerFrm_Closed(object sender, EventArgs e)
+        {
+            isManagerOpen = false;
+            Game.Unpause();
         }
 
         #region main script events
@@ -156,7 +204,7 @@ namespace UltimateBusinessMod
         void UltimateBusinessMod_Tick(object sender, EventArgs e)
         {
             // check enviroment state, player in combat, in water, dead, in vehicle, etc.., if player meets any of the bellow criteria PropertyProximity and KeyHandler should not work
-            if (!isManagerOpen || Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
+            if (isManagerOpen || Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
                 return;
             // Key handler
             // if Player is next to a property holding the Action key
@@ -197,6 +245,11 @@ namespace UltimateBusinessMod
                     ///
                     /// Open Property Manager
                     ///
+                    isManagerOpen = true;
+                    PropertyManagerFrm.Name = Properties[ProximityPropertyID].Name + "'s Manager";
+                    WorkersDisplayLabel.Text = String.Format("{0}/{1} employees working.", Properties[ProximityPropertyID].StaffCount, Properties[ProximityPropertyID].StaffCap);
+                    Game.Pause();
+                    this.PropertyManagerFrm.Show();
                 }
             }
             // Proximity detection
