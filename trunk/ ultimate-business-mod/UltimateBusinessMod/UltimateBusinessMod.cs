@@ -11,6 +11,7 @@ namespace UltimateBusinessMod
 {
     public class UltimateBusinessMod : Script
     {
+        #region internal use functions
         internal void Msg(string message, int time)
         {
             GTA.Native.Function.Call(
@@ -21,7 +22,7 @@ namespace UltimateBusinessMod
                 true);
         }
 
-
+        #endregion
         #region internal use properties
         /// <summary>
         /// All 15 mission complete audio ids
@@ -33,6 +34,11 @@ namespace UltimateBusinessMod
         /// -1 if the player is not close to a property
         /// </summary>
         public static int ProximityPropertyID;
+        /// <summary>
+        /// Defines if Property Manager is open
+        /// </summary>
+        public static bool isManagerOpen
+        { get; set; }
         
         #endregion
 
@@ -51,6 +57,175 @@ namespace UltimateBusinessMod
         }
         #endregion
 
+        public static Property[] Properties;
+
+        /// <summary>
+        /// The script entry point
+        /// </summary>
+        public UltimateBusinessMod()
+        {
+            #region property init
+            ProximityPropertyID = -1;
+            isManagerOpen = false;
+
+            #endregion
+            #region check for database file, abort script if not found
+            LogFile.Path = Game.InstallFolder + "\\scripts\\UltimateBusinessMod.log";
+            // check for database file
+            if (!CheckForDatabase())
+            {
+                Game.DisplayText("Ultimate Business Mod Database file could not be found. Please re-install the mod.", 3000);
+                Wait(3000);
+                Abort();
+            }
+            #endregion
+            #region logging script start
+            // Get assembly version
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Game.InstallFolder + "\\scripts\\UltimateBusinessMod.net.dll");
+            string version = fvi.FileVersion;
+            // log start
+            Log("UltimateBusinessModv" + version, "Started under GTA " + Game.Version.ToString());
+            Log("UltimateBusinessModv" + version, "dsound.dll " + ((File.Exists(Game.InstallFolder + "\\dsound.dll")) ? "present" : "not present"));
+            Log("UltimateBusinessModv" + version, "xlive.dll " + ((File.Exists(Game.InstallFolder + "\\xlive.dll")) ? "present" : "not present"));
+            Log("UltimateBusinessModv" + version, "OS Version: " + getOSInfo());
+            #endregion
+
+            // wait for map to load
+            Wait(5000);
+
+            #region Load database data and project it on the map
+            // Start loading database records
+            Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
+            Properties = Property.GetPropertiesList();
+            // create blips for each property
+            foreach (Property p in Properties)
+            {
+                try
+                {
+                    // add a small invisible object on the property locatyion
+                    GTA.Object apple = World.CreateObject(new Model("amb_apple_1"), p.Location);
+                    apple.Visible = false;
+                    apple.Collision = false;
+                    // attach a blip for that object
+                    Blip b = apple.AttachBlip();
+                    b.Icon = (p.Owned) ? (BlipIcon)80 : (BlipIcon)0;
+                    b.Name = p.Name;
+                    b.Scale = .7f;
+                    b.ShowOnlyWhenNear = true;
+                    // keep the blip along with the property instance
+                    p.blip = b;
+                }
+                catch (Exception crap) { Log("construct - foreach - blip drawing", crap.Message); }
+            }
+            Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
+            #endregion
+
+            // start our one second timer, let's see how it proves itself with more db records
+            this.Interval = 1000;
+            this.Tick += new EventHandler(UltimateBusinessMod_Tick);
+
+
+// We are in DEBUG mode let's print usefull info
+#if DEBUG
+            this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_DebugPerFrameDrawing);
+#endif
+        }
+
+        #region main script events
+
+        /// <summary>
+        /// DEBUG on-screen info display
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void UltimateBusinessMod_DebugPerFrameDrawing(object sender, GraphicsEventArgs e)
+        {
+            e.Graphics.Scaling = FontScaling.ScreenUnits;
+            e.Graphics.DrawText(Game.FPS.ToString(), .9f, .87f);
+            e.Graphics.DrawText(ProximityPropertyID.ToString(), .9f, .9f);
+        }
+
+        /// <summary>
+        /// Main script tick
+        /// 
+        /// Handles PropertyProximity and Key handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void UltimateBusinessMod_Tick(object sender, EventArgs e)
+        {
+            // check enviroment state, player in combat, in water, dead, in vehicle, etc.., if player meets any of the bellow criteria PropertyProximity and KeyHandler should not work
+            if (!isManagerOpen || Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
+                return;
+            // Key handler
+            // if Player is next to a property holding the Action key
+            if (ProximityPropertyID != -1 && Game.isGameKeyPressed(GameKey.Action))
+            {
+                // if Player doesn't own the property and has money to buy it
+                if (!Properties[ProximityPropertyID].Owned && Player.Money >= Properties[ProximityPropertyID].Cost)
+                {
+                    // buy the property
+                    // avoid whistling at cabs
+                    Player.Character.Task.ClearAllImmediately();
+                    // set all need data in property instance
+                    Properties[ProximityPropertyID].Owned = true;
+                    Properties[ProximityPropertyID].blip.Icon = (BlipIcon)80;
+                    // refresh the blip name, for some reason it gets change to the icon default name
+                    Properties[ProximityPropertyID].blip.Name = Properties[ProximityPropertyID].Name;
+                    // write the change to the database
+                    Properties[ProximityPropertyID].UpdateFlags();
+                    // trigger a random mission complete audio and notify the player
+                    GTA.Native.Function.Call("TRIGGER_MISSION_COMPLETE_AUDIO", buy_audio_list[new Random().Next(0, buy_audio_list.Length)]);
+                    Msg(String.Format("You have just bought {0} for {1:C}", Properties[ProximityPropertyID].Name, Properties[ProximityPropertyID].Cost), 1100);
+                    GTA.Native.Function.Call("DISPLAY_CASH", true);
+// if debug mode is off, this a release so player should pay for the property
+#if !DEBUG
+                    Player.Money -= Properties[ProximityPropertyID].Cost;
+#endif
+                }
+                // Player doesn't have enought money to buy this property
+                else if (!Properties[ProximityPropertyID].Owned && Player.Money < Properties[ProximityPropertyID].Cost)
+                {
+                    Msg(String.Format("You require {0:C} to buy {1}", Properties[ProximityPropertyID].Cost, Properties[ProximityPropertyID].Name), 1100);
+                }
+                // Player owns this property, let's open the manager
+                else if (Properties[ProximityPropertyID].Owned)
+                {
+                    ///
+                    /// TODO
+                    ///
+                    /// Open Property Manager
+                    ///
+                }
+            }
+            // Proximity detection
+            foreach (Property p in Properties)
+            {
+                // if Player is holding the action key, no need to waste our thread with property scans
+                if (Game.isGameKeyPressed(GameKey.Action))
+                    return;
+                // if Property is ownable and the Player is next to it
+                if (p.Ownable && Player.Character.Position.DistanceTo2D(p.Location) < 3)
+                {
+                    // updata ProximityPropertyID
+                    ProximityPropertyID = p.ID - 1;
+                    // display available actions
+                    if (!p.Owned)
+                        if (Player.Money <= p.Cost)
+                            Msg(String.Format("You require {0:C} to buy {1}", p.Cost, p.Name), 1100);
+                        else
+                            Msg(String.Format("Hold {0} to buy {1} for {2:C}", "~INPUT_FRONTEND_LB~", p.Name, p.Cost), 1100);
+                    else
+                        Msg(String.Format("Hold {0} to open {1}'s manager", "~INPUT_FRONTEND_LB~", p.Name), 1100);
+                    return;
+                }
+            }
+            // foreach reached end so Player is not next to a property
+            ProximityPropertyID = -1;
+        }
+
+        #endregion
         #region log functions
         /// <summary>
         /// Get os name and SP
@@ -169,123 +344,5 @@ namespace UltimateBusinessMod
 
         }
         #endregion
-
-        public static Property[] Properties;
-
-        /// <summary>
-        /// The script entry point
-        /// </summary>
-        public UltimateBusinessMod()
-        {
-            #region check for database file, abort script if not found
-            LogFile.Path = Game.InstallFolder + "\\scripts\\UltimateBusinessMod.log";
-            // check for database file
-            if (!CheckForDatabase())
-            {
-                Game.DisplayText("Ultimate Business Mod Database file could not be found. Please re-install the mod.", 3000);
-                Wait(3000);
-                Abort();
-            }
-            #endregion
-            #region logging script start
-            // Log script start
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Game.InstallFolder + "\\scripts\\UltimateBusinessMod.net.dll");
-            string version = fvi.FileVersion;
-            Log("UltimateBusinessModv" + version, "Started under GTA " + Game.Version.ToString());
-            Log("UltimateBusinessModv" + version, "dsound.dll " + ((File.Exists(Game.InstallFolder + "\\dsound.dll")) ? "present" : "not present"));
-            Log("UltimateBusinessModv" + version, "xlive.dll " + ((File.Exists(Game.InstallFolder + "\\xlive.dll")) ? "present" : "not present"));
-            Log("UltimateBusinessModv" + version, "OS Version: " + getOSInfo());
-            #endregion
-
-            // wait for map to load
-            Wait(5000);
-
-            // Start loading database records
-            Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
-            Properties = Property.GetPropertiesList();
-            // create blips for each property
-            foreach (Property p in Properties)
-            {
-                try
-                {
-                    GTA.Object apple = World.CreateObject(new Model("amb_apple_1"), p.Location);
-                    apple.Visible = false;
-                    apple.Collision = false;
-                    Blip b = apple.AttachBlip();
-                    b.Icon = (p.Owned) ? (BlipIcon)80 : (BlipIcon)0;
-                    b.Name = p.Name;
-                    b.Scale = .7f;
-                    b.ShowOnlyWhenNear = true;
-                    p.blip = b;
-                }
-                catch (Exception crap) { /* Log("construct - foreach - blip drawing", crap.Message);*/ }
-            }
-
-            //Game.Unpause();
-            Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
-
-            this.Interval = 1000;
-            this.Tick += new EventHandler(UltimateBusinessMod_Tick);
-#if DEBUG
-            this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_PerFrameDrawing);
-#endif
-        }
-
-        void UltimateBusinessMod_PerFrameDrawing(object sender, GraphicsEventArgs e)
-        {
-            e.Graphics.Scaling = FontScaling.ScreenUnits;
-            e.Graphics.DrawText(Game.FPS.ToString(), .9f, .87f);
-            e.Graphics.DrawText(ProximityPropertyID.ToString(), .9f, .9f);
-        }
-
-        void UltimateBusinessMod_Tick(object sender, EventArgs e)
-        {
-            // check enviroment state, player in combat, in water, dead, in vehicle, etc..
-            if (Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
-                return;
-            // Key handler
-            if (ProximityPropertyID != -1 && Game.isGameKeyPressed(GameKey.Action))
-            {
-                if (!Properties[ProximityPropertyID].Owned && Player.Money >= Properties[ProximityPropertyID].Cost)
-                {
-                    Player.Character.Task.ClearAllImmediately();
-                    Properties[ProximityPropertyID].Owned = true;
-                    Properties[ProximityPropertyID].blip.Icon = (BlipIcon)80;
-                    Properties[ProximityPropertyID].blip.Name = Properties[ProximityPropertyID].Name;
-                    Properties[ProximityPropertyID].UpdateFlags();
-                    GTA.Native.Function.Call("TRIGGER_MISSION_COMPLETE_AUDIO", buy_audio_list[new Random().Next(0, buy_audio_list.Length)]);
-                    Msg(String.Format("You have just bought {0} for {1:C}", Properties[ProximityPropertyID].Name, Properties[ProximityPropertyID].Cost), 1100);
-                    GTA.Native.Function.Call("DISPLAY_CASH", true);
-#if !DEBUG
-                    Player.Money -= Properties[ProximityPropertyID].Cost;
-#endif
-                }
-                else if (!Properties[ProximityPropertyID].Owned && Player.Money < Properties[ProximityPropertyID].Cost)
-                {
-                    Msg(String.Format("You require {0:C} to buy {1}", Properties[ProximityPropertyID].Cost, Properties[ProximityPropertyID].Name), 1100);
-                }
-            }
-            // Proximity detection
-            foreach (Property p in Properties)
-            {
-                if (Game.isGameKeyPressed(GameKey.Action))
-                    return;
-                if (p.Ownable && Player.Character.Position.DistanceTo2D(p.Location) < 3)
-                {
-                    ProximityPropertyID = p.ID - 1;
-                    if (!p.Owned)
-                        if (Player.Money <= p.Cost)
-                            Msg(String.Format("You require {0:C} to buy {1}", p.Cost, p.Name), 1100);
-                        else
-                            Msg(String.Format("Hold {0} to buy {1} for {2:C}", "~INPUT_FRONTEND_LB~", p.Name, p.Cost), 1100);
-                    else
-                        Msg(String.Format("Hold {0} to open {1}'s manager", "~INPUT_FRONTEND_LB~", p.Name), 1100);
-                    return;
-                }
-            }
-            ProximityPropertyID = -1;
-        }
-
     }
 }
