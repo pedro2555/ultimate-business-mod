@@ -97,7 +97,7 @@ namespace UltimateBusinessMod
             if (Player.Money - PP.StaffPay >= 0)
             {
                 UltimateBusinessMod.ProximityProperty.AddStaff();
-#if DEBUG
+#if !DEBUG
                 Player.Money -= PP.StaffPay;
 #endif
             }
