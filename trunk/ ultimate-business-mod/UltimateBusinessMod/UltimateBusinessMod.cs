@@ -24,6 +24,14 @@ namespace UltimateBusinessMod
 
         #endregion
         #region internal use properties
+
+        public static Property ProximityProperty
+        {
+            get
+            {
+                return Properties[ProximityPropertyID];
+            }
+        }
         /// <summary>
         /// All 15 mission complete audio ids
         /// TRIGGER_MISSION_COMPLETE_AUDIO
@@ -39,7 +47,14 @@ namespace UltimateBusinessMod
         /// </summary>
         public static bool isManagerOpen
         { get; set; }
-        
+        /// <summary>
+        /// List of Property locations and specific data
+        /// </summary>
+        public static Property[] Properties;
+        /// <summary>
+        /// List of PropertyTypes
+        /// </summary>
+        public static PropertyType[] Types;
         #endregion
 
         #region database functions
@@ -57,7 +72,7 @@ namespace UltimateBusinessMod
         }
         #endregion
 
-        public static Property[] Properties;
+        private PropertyManagerForm ManagerFrm;
 
         /// <summary>
         /// The script entry point
@@ -66,8 +81,6 @@ namespace UltimateBusinessMod
         {
             #region property init
             ProximityPropertyID = -1;
-            isManagerOpen = false;
-
             #endregion
             #region check for database file, abort script if not found
             LogFile.Path = Game.InstallFolder + "\\scripts\\UltimateBusinessMod.log";
@@ -121,6 +134,12 @@ namespace UltimateBusinessMod
             Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
             #endregion
 
+            #region initialize Manager
+            ManagerFrm = new PropertyManagerForm(Game.Resolution, Player);
+
+            #endregion
+
+
             // start our one second timer, let's see how it proves itself with more db records
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
@@ -130,6 +149,16 @@ namespace UltimateBusinessMod
 #if DEBUG
             this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_DebugPerFrameDrawing);
 #endif
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public static void PropertyManagerFrm_Closed(object sender, EventArgs e)
+        {
+            isManagerOpen = false;
+            Game.Unpause();
         }
 
         #region main script events
@@ -156,47 +185,50 @@ namespace UltimateBusinessMod
         void UltimateBusinessMod_Tick(object sender, EventArgs e)
         {
             // check enviroment state, player in combat, in water, dead, in vehicle, etc.., if player meets any of the bellow criteria PropertyProximity and KeyHandler should not work
-            if (!isManagerOpen || Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
+            if (isManagerOpen || Player.Character.isInVehicle() || Player.Character.isDead || Player.Character.isGettingIntoAVehicle || Player.Character.isGettingUp || Player.Character.isInCombat || Player.Character.isInMeleeCombat || Player.Character.isInWater || Player.Character.isOnFire || Player.Character.isRagdoll || Player.Character.isShooting || Player.WantedLevel > 0)
                 return;
             // Key handler
             // if Player is next to a property holding the Action key
             if (ProximityPropertyID != -1 && Game.isGameKeyPressed(GameKey.Action))
             {
                 // if Player doesn't own the property and has money to buy it
-                if (!Properties[ProximityPropertyID].Owned && Player.Money >= Properties[ProximityPropertyID].Cost)
+                if (!ProximityProperty.Owned && Player.Money >= ProximityProperty.Cost)
                 {
                     // buy the property
                     // avoid whistling at cabs
                     Player.Character.Task.ClearAllImmediately();
                     // set all need data in property instance
-                    Properties[ProximityPropertyID].Owned = true;
-                    Properties[ProximityPropertyID].blip.Icon = (BlipIcon)80;
+                    ProximityProperty.Owned = true;
+                    ProximityProperty.blip.Icon = (BlipIcon)80;
                     // refresh the blip name, for some reason it gets change to the icon default name
-                    Properties[ProximityPropertyID].blip.Name = Properties[ProximityPropertyID].Name;
+                    ProximityProperty.blip.Name = ProximityProperty.Name;
                     // write the change to the database
-                    Properties[ProximityPropertyID].UpdateFlags();
+                    ProximityProperty.UpdateFlags();
                     // trigger a random mission complete audio and notify the player
                     GTA.Native.Function.Call("TRIGGER_MISSION_COMPLETE_AUDIO", buy_audio_list[new Random().Next(0, buy_audio_list.Length)]);
-                    Msg(String.Format("You have just bought {0} for {1:C}", Properties[ProximityPropertyID].Name, Properties[ProximityPropertyID].Cost), 1100);
+                    Msg(String.Format("You have just bought {0} for {1:C}", ProximityProperty.Name, ProximityProperty.Cost), 1100);
                     GTA.Native.Function.Call("DISPLAY_CASH", true);
 // if debug mode is off, this a release so player should pay for the property
 #if !DEBUG
-                    Player.Money -= Properties[ProximityPropertyID].Cost;
+                    Player.Money -= ProximityProperty.Cost;
 #endif
                 }
                 // Player doesn't have enought money to buy this property
-                else if (!Properties[ProximityPropertyID].Owned && Player.Money < Properties[ProximityPropertyID].Cost)
+                else if (!ProximityProperty.Owned && Player.Money < ProximityProperty.Cost)
                 {
-                    Msg(String.Format("You require {0:C} to buy {1}", Properties[ProximityPropertyID].Cost, Properties[ProximityPropertyID].Name), 1100);
+                    Msg(String.Format("You require {0:C} to buy {1}", ProximityProperty.Cost, ProximityProperty.Name), 1100);
                 }
                 // Player owns this property, let's open the manager
-                else if (Properties[ProximityPropertyID].Owned)
+                else if (ProximityProperty.Owned)
                 {
                     ///
                     /// TODO
                     ///
                     /// Open Property Manager
                     ///
+                    isManagerOpen = true;
+                    Game.Pause();
+                    ManagerFrm.Show();
                 }
             }
             // Proximity detection
