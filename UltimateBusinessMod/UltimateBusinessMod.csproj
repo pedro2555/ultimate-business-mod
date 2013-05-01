@@ -61,6 +61,9 @@
     <Compile Include="PropertyManagerForm.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PropertyManagerForm.Designer.cs">
+      <DependentUpon>PropertyManagerForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PropertyType.cs" />
     <Compile Include="UltimateBusinessMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

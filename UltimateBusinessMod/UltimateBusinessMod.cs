@@ -134,12 +134,6 @@ namespace UltimateBusinessMod
             Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
             #endregion
 
-            #region initialize Manager
-            ManagerFrm = new PropertyManagerForm(Game.Resolution, Player);
-
-            #endregion
-
-
             // start our one second timer, let's see how it proves itself with more db records
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
@@ -226,8 +220,10 @@ namespace UltimateBusinessMod
                     ///
                     /// Open Property Manager
                     ///
+                    Player.Character.Task.ClearAllImmediately();
                     isManagerOpen = true;
                     Game.Pause();
+                    ManagerFrm = new PropertyManagerForm(Game.Resolution, Player);
                     ManagerFrm.Show();
                 }
             }

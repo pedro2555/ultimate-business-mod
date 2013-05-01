@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace UltimateBusinessMod
 {
-    public class PropertyManagerForm : GTA.Forms.Form
+    public partial class PropertyManagerForm : GTA.Forms.Form
     {
         private Property PP
         {
@@ -18,13 +18,7 @@ namespace UltimateBusinessMod
         private GTA.Player Player;
 
         #region Control declaration
-        public GTA.Forms.Form PropertyManagerFrm;
-
-        public GTA.Forms.Label WorkersDisplayLabel;
-
-        public GTA.Forms.Button AddWorker;
-
-        public GTA.Forms.Button RemoveWorker;
+        
 
         
 
@@ -37,29 +31,7 @@ namespace UltimateBusinessMod
             {
                 this.Player = Player;
                 this.Size = ScreenSize;
-                this.TitleBackColor = System.Drawing.Color.FromArgb(200, 0, 0, 0);
-                this.BackColor = System.Drawing.Color.FromArgb(150, 0, 0, 0);
-                this.Location = new System.Drawing.Point(0, 0);
-                this.Closed += new EventHandler(UltimateBusinessMod.PropertyManagerFrm_Closed);
-                // Workers label
-                WorkersDisplayLabel = new GTA.Forms.Label();
-                this.Controls.Add(WorkersDisplayLabel);
-                WorkersDisplayLabel.Location = new System.Drawing.Point(30, 30);
-                WorkersDisplayLabel.Size = new System.Drawing.Size(275, 50);
-                // Add Worker Button
-                AddWorker = new GTA.Forms.Button();
-                AddWorker.Size = new System.Drawing.Size(100, 20);
-                AddWorker.Location = new System.Drawing.Point(300, 30);
-                AddWorker.Text = "Hire worker";
-                AddWorker.Click += new GTA.MouseEventHandler(AddWorker_Click);
-                this.Controls.Add(AddWorker);
-                // Remove Worker Button
-                RemoveWorker = new GTA.Forms.Button();
-                RemoveWorker.Size = new System.Drawing.Size(100, 20);
-                RemoveWorker.Location = new System.Drawing.Point(300, 55);
-                RemoveWorker.Text = "Fire worker";
-                RemoveWorker.Click += new GTA.MouseEventHandler(RemoveWorker_Click);
-                this.Controls.Add(RemoveWorker);
+                this.InitializeComponent();
             }
             catch (Exception crap) { LogFile.Log("PropertyManagerForm", crap.Message); }
         }
