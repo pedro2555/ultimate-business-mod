@@ -116,6 +116,7 @@ namespace UltimateBusinessMod
             int income = PP.Income;
             PP.Income = 0;
             Player.Money += income;
+            PP.UpdateIncome(0);
             RefreshGUI();
         }
     }

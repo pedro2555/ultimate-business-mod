@@ -52,6 +52,7 @@ namespace UltimateBusinessMod
             LogFile.Log("DB_select", Flags);
         }
 
+        #region db fields
         /// <summary>
         /// Database ID
         /// </summary>
@@ -132,7 +133,7 @@ namespace UltimateBusinessMod
         /// </summary>
         public int TypeID
         { get; private set; }
-
+        #endregion
         /// <summary>
         /// Writes instance flags to correspondent database field
         /// </summary>
@@ -181,6 +182,25 @@ namespace UltimateBusinessMod
             Database.Update("Properties", data, String.Format("ID={0}", this.ID));
 
             return true;
+        }
+        /// <summary>
+        /// Updates income value to value specified in newValue
+        /// </summary>
+        /// <param name="newValue"></param>
+        /// <returns></returns>
+        public bool UpdateIncome(int newValue)
+        {
+            try
+            {
+                Dictionary<string, string> data = new Dictionary<string, string>();
+                data.Add("Income", newValue.ToString());
+                LogFile.Log("UpdateIncome", newValue.ToString());
+                Database.Update("Properties", data, String.Format("ID={0}", this.ID));
+
+                return true;
+            }
+            catch (Exception crap) { LogFile.Log("UpdateIncome - Error", newValue.ToString()); return false; }
+
         }
     }
 }
