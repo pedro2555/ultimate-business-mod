@@ -79,6 +79,8 @@ namespace UltimateBusinessMod
         /// </summary>
         public UltimateBusinessMod()
         {
+            Log("Script load started", DateTime.Now.ToString("hh:mm:ss.fff tt"));
+
             #region property init
             ProximityPropertyID = -1;
             #endregion
@@ -104,13 +106,14 @@ namespace UltimateBusinessMod
             Log("UltimateBusinessModv" + version, "OS Version: " + getOSInfo());
             #endregion
 
+
+            // Start loading database records
+            Properties = Property.GetPropertiesList();
+
             // wait for map to load
             Wait(5000);
 
             #region Load database data and project it on the map
-            // Start loading database records
-            Game.DisplayText("Loading Ultimate Business Mod Data...", 100000);
-            Properties = Property.GetPropertiesList();
             // create blips for each property
             foreach (Property p in Properties)
             {
@@ -131,7 +134,6 @@ namespace UltimateBusinessMod
                 }
                 catch (Exception crap) { Log("construct - foreach - blip drawing", crap.Message); }
             }
-            Game.DisplayText("Ultimate Business Mod Data loaded successfully.", 1000);
             #endregion
 
             // start our one second timer, let's see how it proves itself with more db records
@@ -143,6 +145,10 @@ namespace UltimateBusinessMod
 #if DEBUG
             this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_DebugPerFrameDrawing);
 #endif
+            // Initialize manager
+            ManagerFrm = new PropertyManagerForm(Game.Resolution, Player);
+
+            Log("Script load finished", DateTime.Now.ToString("hh:mm:ss.fff tt"));
         }
         /// <summary>
         /// 
@@ -152,7 +158,7 @@ namespace UltimateBusinessMod
         public static void PropertyManagerFrm_Closed(object sender, EventArgs e)
         {
             isManagerOpen = false;
-            Game.Unpause();
+            //Game.Unpause();
         }
 
         #region main script events
@@ -220,11 +226,16 @@ namespace UltimateBusinessMod
                     ///
                     /// Open Property Manager
                     ///
+
+                    this.Tick -= new EventHandler(UltimateBusinessMod_Tick);
                     Player.Character.Task.ClearAllImmediately();
                     isManagerOpen = true;
                     Game.Pause();
-                    ManagerFrm = new PropertyManagerForm(Game.Resolution, Player);
                     ManagerFrm.Show();
+                    Player.Character.Task.ClearAllImmediately();
+                    Game.Unpause();
+                    this.Tick += new EventHandler(UltimateBusinessMod_Tick);
+                    GTA.Native.Function.Call("DISPLAY_CASH", true);
                 }
             }
             // Proximity detection
