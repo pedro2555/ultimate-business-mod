@@ -62,7 +62,7 @@ namespace UltimateBusinessMod
                 }
                 else
                 {
-                    IncomeLabel.Text = String.Format("There's no income to collect.");
+                    IncomeLabel.Text = String.Format("Theres no income to collect.");
                     IncomeCollectBtn.Visible = false;
                 }
             }

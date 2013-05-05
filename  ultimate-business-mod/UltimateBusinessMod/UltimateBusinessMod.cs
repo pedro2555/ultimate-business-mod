@@ -72,6 +72,8 @@ namespace UltimateBusinessMod
         }
         #endregion
 
+        Stopwatch sw;
+
         private PropertyManagerForm ManagerFrm;
 
         /// <summary>
@@ -80,7 +82,8 @@ namespace UltimateBusinessMod
         public UltimateBusinessMod()
         {
             Log("Script load started", DateTime.Now.ToString("hh:mm:ss.fff tt"));
-
+            sw = new Stopwatch();
+            sw.Start();
             #region property init
             ProximityPropertyID = -1;
             #endregion
@@ -129,6 +132,7 @@ namespace UltimateBusinessMod
                     b.Name = p.Name;
                     b.Scale = .7f;
                     b.ShowOnlyWhenNear = true;
+                    b.RouteActive = false;
                     // keep the blip along with the property instance
                     p.blip = b;
                 }
@@ -140,6 +144,7 @@ namespace UltimateBusinessMod
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
 
+            this.BindKey(System.Windows.Forms.Keys.Z, new KeyPressDelegate(this.StatSW));
 
 // We are in DEBUG mode let's print usefull info
 #if DEBUG
@@ -161,6 +166,20 @@ namespace UltimateBusinessMod
             //Game.Unpause();
         }
 
+        public void StatSW()
+        {
+            if (sw.IsRunning)
+            {
+                sw.Stop();
+            }
+            else
+            {
+                sw.Reset();
+                sw.Start();
+            }
+        }
+
+
         #region main script events
 
         /// <summary>
@@ -171,8 +190,9 @@ namespace UltimateBusinessMod
         void UltimateBusinessMod_DebugPerFrameDrawing(object sender, GraphicsEventArgs e)
         {
             e.Graphics.Scaling = FontScaling.ScreenUnits;
-            e.Graphics.DrawText(Game.FPS.ToString(), .9f, .87f);
-            e.Graphics.DrawText(ProximityPropertyID.ToString(), .9f, .9f);
+            e.Graphics.DrawText(sw.Elapsed.ToString(), .9f, .87f);
+            e.Graphics.DrawText(World.CurrentDayTime.ToString(), .9f, .9f);
+
         }
 
         /// <summary>
@@ -216,7 +236,7 @@ namespace UltimateBusinessMod
                 // Player doesn't have enought money to buy this property
                 else if (!ProximityProperty.Owned && Player.Money < ProximityProperty.Cost)
                 {
-                    Msg(String.Format("You require {0:C} to buy {1}", ProximityProperty.Cost, ProximityProperty.Name), 1100);
+                    Msg(String.Format("You require ~r~{0:C}~w~ to buy {1}", ProximityProperty.Cost, ProximityProperty.Name), 1100);
                 }
                 // Player owns this property, let's open the manager
                 else if (ProximityProperty.Owned)
@@ -252,9 +272,9 @@ namespace UltimateBusinessMod
                     // display available actions
                     if (!p.Owned)
                         if (Player.Money <= p.Cost)
-                            Msg(String.Format("You require {0:C} to buy {1}", p.Cost, p.Name), 1100);
+                            Msg(String.Format("You require ~r~{0:C}~w~ to buy {1}", p.Cost, p.Name), 1100);
                         else
-                            Msg(String.Format("Hold {0} to buy {1} for {2:C}", "~INPUT_FRONTEND_LB~", p.Name, p.Cost), 1100);
+                            Msg(String.Format("Hold {0} to buy {1} for ~g~{2:C}~w~", "~INPUT_FRONTEND_LB~", p.Name, p.Cost), 1100);
                     else
                         Msg(String.Format("Hold {0} to open {1}'s manager", "~INPUT_FRONTEND_LB~", p.Name), 1100);
                     return;
