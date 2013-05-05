@@ -144,8 +144,6 @@ namespace UltimateBusinessMod
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
 
-            this.BindKey(System.Windows.Forms.Keys.Z, new KeyPressDelegate(this.StatSW));
-
 // We are in DEBUG mode let's print usefull info
 #if DEBUG
             this.PerFrameDrawing += new GraphicsEventHandler(UltimateBusinessMod_DebugPerFrameDrawing);
@@ -162,21 +160,9 @@ namespace UltimateBusinessMod
         /// <param name="e"></param>
         public static void PropertyManagerFrm_Closed(object sender, EventArgs e)
         {
+            GTA.Native.Function.Call("DISPLAY_CASH", true);
             isManagerOpen = false;
             //Game.Unpause();
-        }
-
-        public void StatSW()
-        {
-            if (sw.IsRunning)
-            {
-                sw.Stop();
-            }
-            else
-            {
-                sw.Reset();
-                sw.Start();
-            }
         }
 
 
@@ -190,7 +176,7 @@ namespace UltimateBusinessMod
         void UltimateBusinessMod_DebugPerFrameDrawing(object sender, GraphicsEventArgs e)
         {
             e.Graphics.Scaling = FontScaling.ScreenUnits;
-            e.Graphics.DrawText(sw.Elapsed.ToString(), .9f, .87f);
+            e.Graphics.DrawText("test field", .9f, .87f);
             e.Graphics.DrawText(World.CurrentDayTime.ToString(), .9f, .9f);
 
         }
@@ -239,7 +225,7 @@ namespace UltimateBusinessMod
                     Msg(String.Format("You require ~r~{0:C}~w~ to buy {1}", ProximityProperty.Cost, ProximityProperty.Name), 1100);
                 }
                 // Player owns this property, let's open the manager
-                else if (ProximityProperty.Owned)
+                else if (ProximityProperty.Owned && !isManagerOpen)
                 {
                     ///
                     /// TODO
@@ -250,13 +236,14 @@ namespace UltimateBusinessMod
                     this.Tick -= new EventHandler(UltimateBusinessMod_Tick);
                     Player.Character.Task.ClearAllImmediately();
                     isManagerOpen = true;
-                    Game.Pause();
+                    //Game.Pause();
                     ManagerFrm.Show();
                     Player.Character.Task.ClearAllImmediately();
-                    Game.Unpause();
+                    //Game.Unpause();
                     this.Tick += new EventHandler(UltimateBusinessMod_Tick);
                     GTA.Native.Function.Call("DISPLAY_CASH", true);
                 }
+
             }
             // Proximity detection
             foreach (Property p in Properties)
