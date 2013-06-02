@@ -1,4 +1,15 @@
-﻿using System;
+﻿/// Copyright (c) 2013, Pedro Rodrigues <prodrigues1990@gmail.com>
+/// All rights reserved.
+/// 
+/// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+/// 
+/// 	-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+/// 	-Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+/// 	-Neither the name of the author nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+/// 
+/// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +17,7 @@ using System.IO;
 using GTA;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 
 namespace UltimateBusinessMod
 {
@@ -111,7 +123,7 @@ namespace UltimateBusinessMod
             Properties = Property.GetPropertiesList();
 
             // wait for map to load
-            Wait(5000);
+            Wait(6000);
 
             #region Load database data and project it on the map
             // create blips for each property
@@ -135,10 +147,14 @@ namespace UltimateBusinessMod
                 catch (Exception crap) { Log("construct - foreach - blip drawing", crap.Message); }
             }
             #endregion
-
+            Wait(500);
             // start our one second timer, let's see how it proves itself with more db records
             this.Interval = 1000;
             this.Tick += new EventHandler(UltimateBusinessMod_Tick);
+
+            // update thread initialization
+            Thread updateThread = new Thread(new ThreadStart(RealTimeUpdater));
+            
 
 
 // We are in DEBUG mode let's print usefull info
@@ -149,6 +165,10 @@ namespace UltimateBusinessMod
             ManagerFrm = new PropertyManagerForm(Game.Resolution, Player);
 
             Log("Script load finished", DateTime.Now.ToString("hh:mm:ss.fff tt"));
+
+            Wait(500);
+
+            updateThread.Start();
         }
         /// <summary>
         /// 
@@ -160,6 +180,59 @@ namespace UltimateBusinessMod
             isManagerOpen = false;
             //Game.Unpause();
         }
+
+
+        #region methods
+        /// <summary>
+        /// Updates property income and costs over time
+        /// 
+        /// intended to run every 5 minutes of game time.
+        /// </summary>
+        public void RealTimeUpdater()
+        {
+            while (true)
+            {
+                try
+                {
+                    // Salary payment
+                    if (!isManagerOpen && World.CurrentDayTime.Minutes % 5 == 0/*World.CurrentDate.DayOfWeek == DayOfWeek.Monday*/)
+                    {
+                        int index = 0;
+                        foreach (Property p in UltimateBusinessMod.Properties)
+                        {
+                            if (p.StaffCount > 0)
+                            {
+                                int totalpayment = (p.StaffSal * p.StaffCount);
+                                // check for available Player money
+                                if (totalpayment > Player.Money)
+                                {
+                                    // Player can't pay staff
+                                    UltimateBusinessMod.Properties[index].StaffPayed = false;
+                                    UltimateBusinessMod.Properties[index].UpdateFlags();
+                                    GTA.Native.Function.Call("DISPLAY_CASH", true);
+                                    Msg(String.Format("Salaries from {0} haven't been payed.", p.Name), 1000);
+                                }
+                                else
+                                {
+                                    // Payment is successfull
+                                    Player.Money -= totalpayment;
+                                    GTA.Native.Function.Call("DISPLAY_CASH", true);
+                                    if (!UltimateBusinessMod.Properties[index].StaffPayed)
+                                    {
+                                        UltimateBusinessMod.Properties[index].StaffPayed = true;
+                                        UltimateBusinessMod.Properties[index].UpdateFlags();
+                                    }
+                                }
+                            }
+                            index++;
+                        }
+                    }
+                }
+                catch (Exception crap) { Log("Updater Thread", crap.Message); }
+            }
+        }
+
+        #endregion
 
         #region main script events
 
@@ -208,10 +281,7 @@ namespace UltimateBusinessMod
                     GTA.Native.Function.Call("TRIGGER_MISSION_COMPLETE_AUDIO", buy_audio_list[new Random().Next(0, buy_audio_list.Length)]);
                     Msg(String.Format("You have just bought {0} for {1:C}", ProximityProperty.Name, ProximityProperty.Cost), 1100);
                     GTA.Native.Function.Call("DISPLAY_CASH", true);
-// if debug mode is off, this a release so player should pay for the property
-#if !DEBUG
                     Player.Money -= ProximityProperty.Cost;
-#endif
                 }
                 // Player doesn't have enought money to buy this property
                 else if (!ProximityProperty.Owned && Player.Money < ProximityProperty.Cost)
@@ -222,18 +292,16 @@ namespace UltimateBusinessMod
                 else if (ProximityProperty.Owned)
                 {
                     ///
-                    /// TODO
-                    ///
                     /// Open Property Manager
                     ///
 
                     this.Tick -= new EventHandler(UltimateBusinessMod_Tick);
                     Player.Character.Task.ClearAllImmediately();
                     isManagerOpen = true;
-                    Game.Pause();
+                    //Game.Pause();
                     ManagerFrm.Show();
                     Player.Character.Task.ClearAllImmediately();
-                    Game.Unpause();
+                    //Game.Unpause();
                     this.Tick += new EventHandler(UltimateBusinessMod_Tick);
                     GTA.Native.Function.Call("DISPLAY_CASH", true);
                 }

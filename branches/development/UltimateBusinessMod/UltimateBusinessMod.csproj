@@ -98,7 +98,8 @@
 SubWCRev "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod" "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod\UltimateBusinessMod\Properties\AssemblyInfo.tmpl" "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod\UltimateBusinessMod\Properties\AssemblyInfo.cs"</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>robocopy "D:\Program Files\Rockstar Games\Grand Theft Auto IV\scripts" "\\ANDRE-PC\scripts" /MIR</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
