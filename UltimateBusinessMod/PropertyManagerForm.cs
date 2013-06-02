@@ -1,4 +1,15 @@
-﻿using System;
+﻿/// Copyright (c) 2013, Pedro Rodrigues <prodrigues1990@gmail.com>
+/// All rights reserved.
+/// 
+/// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+/// 
+/// 	-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+/// 	-Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+/// 	-Neither the name of the author nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+/// 
+/// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,20 +61,23 @@ namespace UltimateBusinessMod
         {
             try
             {
-                // Workers Label
-                if (PP.StaffPay == 0)
-                    WorkersDisplayLabel.Text = String.Format("{0} out of {1} employees.\nSalary : {2:C}/hr", PP.StaffCount, PP.StaffCap, PP.StaffSal);
-                else
-                    WorkersDisplayLabel.Text = String.Format("{0} out of {1} employees.\nSalary : {2:C}/hr.\n{3:C} up front payment.", PP.StaffCount, PP.StaffCap, PP.StaffSal, PP.StaffPay);
-                if (PP.Income > 100)
+                lock (PP)
                 {
-                    IncomeLabel.Text = String.Format("There's {0:C} to collect.", PP.Income);
-                    IncomeCollectBtn.Visible = true;
-                }
-                else
-                {
-                    IncomeLabel.Text = String.Format("There's no income to collect.");
-                    IncomeCollectBtn.Visible = false;
+                    // Workers Label
+                    if (PP.StaffPay == 0)
+                        WorkersDisplayLabel.Text = String.Format("{0} out of {1} employees.\nSalary : {2:C}/hr", PP.StaffCount, PP.StaffCap, PP.StaffSal);
+                    else
+                        WorkersDisplayLabel.Text = String.Format("{0} out of {1} employees.\nSalary : {2:C}/hr.\n{3:C} up front payment.", PP.StaffCount, PP.StaffCap, PP.StaffSal, PP.StaffPay);
+                    if (PP.Income > 100)
+                    {
+                        IncomeLabel.Text = String.Format("There's {0:C} to collect.", PP.Income);
+                        IncomeCollectBtn.Visible = true;
+                    }
+                    else
+                    {
+                        IncomeLabel.Text = String.Format("There's no income to collect.");
+                        IncomeCollectBtn.Visible = false;
+                    }
                 }
             }
             catch (Exception crap) { LogFile.Log("RefreshGUI", crap.Message + "" + PP.Income); }
@@ -96,12 +110,13 @@ namespace UltimateBusinessMod
         /// <param name="e"></param>
         void AddWorker_Click(object sender, GTA.MouseEventArgs e)
         {
-            if (Player.Money - PP.StaffPay >= 0)
+            lock (PP)
             {
-                UltimateBusinessMod.ProximityProperty.AddStaff();
-#if !DEBUG
-                Player.Money -= PP.StaffPay;
-#endif
+                if (Player.Money - PP.StaffPay >= 0)
+                {
+                    UltimateBusinessMod.ProximityProperty.AddStaff();
+                    Player.Money -= PP.StaffPay;
+                }
             }
             RefreshGUI();
         }
@@ -112,12 +127,15 @@ namespace UltimateBusinessMod
         /// <param name="e"></param>
         void IncomeCollectBtn_Click(object sender, GTA.MouseEventArgs e)
         {
-            // Collect the money and reset the income value
-            int income = PP.Income;
-            PP.Income = 0;
-            Player.Money += income;
-            PP.UpdateIncome(0);
-            RefreshGUI();
+            lock (PP)
+            {
+                // Collect the money and reset the income value
+                int income = PP.Income;
+                PP.Income = 0;
+                Player.Money += income;
+                PP.UpdateIncome(0);
+                RefreshGUI();
+            }
         }
     }
 }
