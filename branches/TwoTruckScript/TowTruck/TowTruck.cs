@@ -9,7 +9,7 @@ namespace TowTruck
 {
     public class TowTruck : Script
     {
-        Vehicle TowTruck;
+        Vehicle TowTruckVehicle;
 
         TowTruck()
         {
@@ -19,7 +19,7 @@ namespace TowTruck
 
         public void SpawnPacker()
         {
-            this.TowTruck = World.CreateVehicle(new Model("packer"), World.GetNextPositionOnStreet(Player.Character.Position));
+            this.TowTruckVehicle = World.CreateVehicle(new Model("packer"), World.GetNextPositionOnStreet(Player.Character.Position));
         }
     }
 }
