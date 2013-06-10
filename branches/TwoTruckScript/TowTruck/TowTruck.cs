@@ -27,12 +27,19 @@ namespace TowTruck
 
         public void SpawnPacker()
         {
-            this.TowTruckVehicle = World.CreateVehicle(new Model("packer"), World.GetNextPositionOnStreet(Player.Character.Position));
-            while (!this.TowTruckVehicle.Exists())
-                Wait(100);  
-            this.TowTruckVehicle.Extras(1).Enabled = false; // liquid tank
-            this.TowTruckVehicle.Extras(3).Enabled = false; // double tower
-            this.TowTruckVehicle.Extras(5).Enabled = false; // unloading ramp
+            try
+            {
+                this.TowTruckVehicle = World.CreateVehicle(new Model("packer"), World.GetNextPositionOnStreet(Player.Character.Position));
+                while (!this.TowTruckVehicle.Exists())
+                    Wait(100);
+                this.TowTruckVehicle.Extras(1).Enabled = false; // liquid tank
+                this.TowTruckVehicle.Extras(3).Enabled = false; // double tower
+                this.TowTruckVehicle.Extras(5).Enabled = false; // unloading ramp
+            }
+            catch (Exception)
+            {
+                Game.DisplayText("Didn't work", 1000);
+            }
         }
 
         public bool isPlayerInValidPacker()
@@ -96,7 +103,7 @@ namespace TowTruck
                         }
                         else
                         {
-                            GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Player.Character.CurrentVehicle.Metadata.VehicleIn, Player.Character.CurrentVehicle, false, 0f, -.8f, .84f, 0f, 0f, 0f);
+                            GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Player.Character.CurrentVehicle.Metadata.VehicleIn, Player.Character.CurrentVehicle, false, 0f, Settings.GetValueFloat("Y", -.8f), Settings.GetValueFloat("Z", .84f), 0f, 0f, 0f);
                             Player.Character.CurrentVehicle.Metadata.isVehicleIn = true;
                         }
 
