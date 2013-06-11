@@ -110,12 +110,13 @@ namespace TowTruck
         {
             try
             {
-                this.TowTruckVehicle = World.CreateVehicle(new Model("packer"), World.GetNextPositionOnStreet(Player.Character.Position));
-                while (!this.TowTruckVehicle.Exists())
+                Vehicle TowTruckVehicle = null;
+                TowTruckVehicle = World.CreateVehicle(new Model("packer"), World.GetNextPositionOnStreet(Player.Character.Position));
+                while (!TowTruckVehicle.Exists())
                     Wait(100);
-                this.TowTruckVehicle.Extras(1).Enabled = false; // liquid tank
-                this.TowTruckVehicle.Extras(3).Enabled = false; // double tower
-                this.TowTruckVehicle.Extras(5).Enabled = false; // unloading ramp
+                TowTruckVehicle.Extras(1).Enabled = false; // liquid tank
+                TowTruckVehicle.Extras(3).Enabled = false; // double tower
+                TowTruckVehicle.Extras(5).Enabled = false; // unloading ramp
             }
             catch (Exception)
             {
