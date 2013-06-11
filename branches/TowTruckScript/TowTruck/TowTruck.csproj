@@ -56,7 +56,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>cd C:\Program Files\TortoiseSVN\bin
-SubWCRev "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod" "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod\TowTruck\Properties\AssemblyInfo.tmpl" "D:\Users\Projects\Visual Studio 2010\UltimateBusinessMod\TowTruck\Properties\AssemblyInfo.cs"</PreBuildEvent>
+SubWCRev "D:\Users\Projects\Visual Studio 2010\TowTruckScript" "D:\Users\Projects\Visual Studio 2010\TowTruckScript\TowTruck\Properties\AssemblyInfo.tmpl" "D:\Users\Projects\Visual Studio 2010\TowTruckScript\TowTruck\Properties\AssemblyInfo.cs"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
