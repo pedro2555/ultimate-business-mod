@@ -5,6 +5,8 @@ using System.Text;
 using GTA;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace TowTruck
 {
@@ -34,6 +36,12 @@ namespace TowTruck
             this.Tick += new EventHandler(TowTruck_Tick);
 
             this.PerFrameDrawing += new GraphicsEventHandler(TowTruck_PerFrameDrawing);
+
+            // Get assembly version
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(Game.InstallFolder + "\\scripts\\TowTruck.net.dll");
+            string version = fvi.FileVersion;
+            Game.Console.Print("Started TowTruckScript v" + version);
         }
 
         void TowTruck_PerFrameDrawing(object sender, GraphicsEventArgs e)
@@ -42,14 +50,14 @@ namespace TowTruck
             if (Player.Character.isInVehicle())
             {
                 // Make sure the vehicle is not moving
-                if (Player.Character.CurrentVehicle.Speed < 1)
+                if (Player.Character.CurrentVehicle.Speed < 0.025 && Player.Character.CurrentVehicle.CurrentRPM < 0.21)
                 {
                     // Make sure the vehicle fits all the required models
                     if (Player.Character.CurrentVehicle.Model.Hash == 569305213) // packer
                     {
                         // check if the player has already grabed the controller.
                         if (Controller == null)
-                            Msg("Hold ~INPUT_FRONTEND_LB~ to grab the ~y~Tow Truck Controller~w~.", 500);
+                            Msg("Hold ~INPUT_FRONTEND_LB~ to grab the ~y~Tow Truck Controller~w~.", 100);
                     }
                 }
             }
@@ -78,7 +86,7 @@ namespace TowTruck
                     ControllerBlip = null;
                 }
                 // Check for the key press and all required situations, must meet the help message
-                if (Player.Character.CurrentVehicle.Speed < 1 && Player.Character.CurrentVehicle.Model.Hash == 569305213 && Game.isGameKeyPressed(GameKey.Action) && Controller == null)
+                if (Player.Character.CurrentVehicle.Speed < 0.025 && Player.Character.CurrentVehicle.CurrentRPM < 0.21 && Player.Character.CurrentVehicle.Model.Hash == 569305213 && Game.isGameKeyPressed(GameKey.Action) && Controller == null)
                 {
                     Controller = Player.Character.CurrentVehicle;
                     ControllerBlip = Controller.AttachBlip();
