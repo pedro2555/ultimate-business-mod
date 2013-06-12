@@ -38,10 +38,6 @@ namespace TowTruck
 
         void TowTruck_PerFrameDrawing(object sender, GraphicsEventArgs e)
         {
-            if (Controller != null)
-            {
-                e.Graphics.DrawText("Controller = true", 1, 1);
-            }
             // Display help message when player is a valid vehicle in valid situation
             if (Player.Character.isInVehicle())
             {
@@ -125,17 +121,31 @@ namespace TowTruck
                 if (TowTruck.Extras(3).Enabled)
                 {
                     // Two car truck
-                    try { Vehicle VehicleA = Controller.Metadata.VehicleA; }
-                    catch (Exception)
+                    Vehicle VehicleA = null;
+                    VehicleA = Controller.Metadata.VehicleA;
+                    if (VehicleA == null)
                     {
-                        GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Car, Controller, false, 0f, -1.7, 1.63, 0.35f, 0f, 0f);
+                        GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Car, Controller, false, 
+                            Settings.GetValueFloat("XOffset", "002", 0.0f), 
+                            Settings.GetValueFloat("YOffset", "002", 0.0f), 
+                            Settings.GetValueFloat("ZOffset", "002", 0.0f), 
+                            Settings.GetValueFloat("XRotation", "002", 0.0f), 
+                            Settings.GetValueFloat("YRotation", "002", 0.0f), 
+                            Settings.GetValueFloat("ZRotation", "002", 0.0f));
                         TowTruck.Metadata.VehicleA = Car;
                         return true;
-                    }
-                    try { Vehicle VehicleB = Controller.Metadata.VehicleB; }
-                    catch (Exception)
+                    } 
+                    Vehicle VehicleB = null;
+                    VehicleB = Controller.Metadata.VehicleB;
+                    if (VehicleB == null)
                     {
-                        GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Car, Controller, false, 0f, 3.4, 3.05, 0.19f, 0f, 0f);
+                        GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Car, Controller, false,
+                            Settings.GetValueFloat("XOffset", "003", 0.0f),
+                            Settings.GetValueFloat("YOffset", "003", 0.0f),
+                            Settings.GetValueFloat("ZOffset", "003", 0.0f),
+                            Settings.GetValueFloat("XRotation", "003", 0.0f),
+                            Settings.GetValueFloat("YRotation", "003", 0.0f),
+                            Settings.GetValueFloat("ZRotation", "003", 0.0f));
                         TowTruck.Metadata.VehicleB = Car;
                         return true;
                     }
@@ -147,7 +157,13 @@ namespace TowTruck
                     try { Vehicle VehicleA = Controller.Metadata.VehicleA; }
                     catch (Exception)
                     {
-                        GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Car, Controller, false, 0f, -1, .95, 0f, 0f, 0f);
+                        GTA.Native.Function.Call("ATTACH_CAR_TO_CAR", Car, Controller, false,
+                            Settings.GetValueFloat("XOffset", "001", 0.0f),
+                            Settings.GetValueFloat("YOffset", "001", 0.0f),
+                            Settings.GetValueFloat("ZOffset", "001", 0.0f),
+                            Settings.GetValueFloat("XRotation", "001", 0.0f),
+                            Settings.GetValueFloat("YRotation", "001", 0.0f),
+                            Settings.GetValueFloat("ZRotation", "001", 0.0f));
                         TowTruck.Metadata.VehicleA = Car;
                         return true;
                     }
@@ -164,23 +180,25 @@ namespace TowTruck
                 {
                     // Two car truck
                     Vehicle VehicleA = null;
-                    try { VehicleA = Controller.Metadata.VehicleA; }
-                    catch (Exception)
+                    VehicleA = Controller.Metadata.VehicleA;
+                    if (VehicleA != null)
                     {
-                        Vehicle VehicleB = null;
-                        try { VehicleB = Controller.Metadata.VehicleB; }
-                        catch (Exception) { return false; }
+                        Controller.Extras(5).Enabled = true;
+                        GTA.Native.Function.Call("DETACH_CAR", VehicleA);
+                        Controller.Metadata.VehicleA = null;
+                        VehicleA.PlaceOnGroundProperly();
+                        return true;
+                    }
+                    Vehicle VehicleB = null;
+                    VehicleB = Controller.Metadata.VehicleB;
+                    if (VehicleB != null)
+                    {
                         Controller.Extras(5).Enabled = true;
                         GTA.Native.Function.Call("DETACH_CAR", VehicleB);
-                        Controller.Metadata.VehicleB.Dispose();
+                        Controller.Metadata.VehicleB = null;
                         VehicleB.PlaceOnGroundProperly();
                         return true;
                     }
-                    Controller.Extras(5).Enabled = true;
-                    GTA.Native.Function.Call("DETACH_CAR", VehicleA);
-                    Controller.Metadata.VehicleA.Dispose();
-                    VehicleA.PlaceOnGroundProperly();
-                    return true;
                 }
                 else
                 {
