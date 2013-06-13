@@ -46,21 +46,25 @@ namespace TowTruck
 
         void TowTruck_PerFrameDrawing(object sender, GraphicsEventArgs e)
         {
-            // Display help message when player is a valid vehicle in valid situation
-            if (Player.Character.isInVehicle())
+            try
             {
-                // Make sure the vehicle is not moving
-                if (Player.Character.CurrentVehicle.Speed < 0.025 && Player.Character.CurrentVehicle.CurrentRPM < 0.21)
+                // Display help message when player is a valid vehicle in valid situation
+                if (Player.Character.isInVehicle())
                 {
-                    // Make sure the vehicle fits all the required models
-                    if (Player.Character.CurrentVehicle.Model.Hash == 569305213) // packer
+                    // Make sure the vehicle is not moving
+                    if (Player.Character.CurrentVehicle.Speed < 0.025 && Player.Character.CurrentVehicle.CurrentRPM < 0.21)
                     {
-                        // check if the player has already grabed the controller.
-                        if (Controller == null)
-                            Msg("Hold ~INPUT_FRONTEND_LB~ to grab the ~y~Tow Truck Controller~w~.", 100);
+                        // Make sure the vehicle fits all the required models
+                        if (Player.Character.CurrentVehicle.Model.Hash == 569305213) // packer
+                        {
+                            // check if the player has already grabed the controller.
+                            if (Controller == null)
+                                Msg("Hold ~INPUT_FRONTEND_LB~ to grab the ~y~Tow Truck Controller~w~.", 100);
+                        }
                     }
                 }
             }
+            catch (Exception) { /* Random crash on exit vehicle */ }
         }
 
         void TowTruck_Tick(object sender, EventArgs e)
@@ -124,6 +128,7 @@ namespace TowTruck
         {
             if (TowTruck.Exists() && Car.Exists())
             {
+                Car.PassengersLeaveVehicle(true);
                 if (TowTruck.Extras(3).Enabled)
                 {
                     // Two car truck
@@ -139,6 +144,7 @@ namespace TowTruck
                             Settings.GetValueFloat("YRotation", "002", 0.0f), 
                             Settings.GetValueFloat("ZRotation", "002", 0.0f));
                         TowTruck.Metadata.VehicleA = Car;
+                        Car.CloseAllDoors();
                         return true;
                     } 
                     Vehicle VehicleB = null;
@@ -153,6 +159,7 @@ namespace TowTruck
                             Settings.GetValueFloat("YRotation", "003", 0.0f),
                             Settings.GetValueFloat("ZRotation", "003", 0.0f));
                         TowTruck.Metadata.VehicleB = Car;
+                        Car.CloseAllDoors();
                         return true;
                     }
                 }
@@ -171,6 +178,7 @@ namespace TowTruck
                             Settings.GetValueFloat("YRotation", "001", 0.0f),
                             Settings.GetValueFloat("ZRotation", "001", 0.0f));
                         TowTruck.Metadata.VehicleA = Car;
+                        Car.CloseAllDoors();
                         return true;
                     }
                 }
@@ -190,19 +198,34 @@ namespace TowTruck
                     if (VehicleA != null)
                     {
                         Controller.Extras(5).Enabled = true;
+                        Controller.FreezePosition = true;
+                        VehicleA.FreezePosition = true;
                         GTA.Native.Function.Call("DETACH_CAR", VehicleA);
                         Controller.Metadata.VehicleA = null;
-                        VehicleA.PlaceOnGroundProperly();
+                        VehicleA.FreezePosition = false;
+                        Controller.FreezePosition = false;
+
+                        VehicleA.HazardLightsOn = true;
+                        Wait(100);
+                        VehicleA.HazardLightsOn = false;
                         return true;
                     }
                     Vehicle VehicleB = null;
                     VehicleB = Controller.Metadata.VehicleB;
                     if (VehicleB != null)
                     {
+                        // Vehicle B
                         Controller.Extras(5).Enabled = true;
+                        Controller.FreezePosition = true;
+                        VehicleB.FreezePosition = true;
                         GTA.Native.Function.Call("DETACH_CAR", VehicleB);
                         Controller.Metadata.VehicleB = null;
-                        VehicleB.PlaceOnGroundProperly();
+                        VehicleB.FreezePosition = false;
+                        Controller.FreezePosition = false;
+
+                        VehicleB.HazardLightsOn = true;
+                        Wait(100);
+                        VehicleB.HazardLightsOn = false;
                         return true;
                     }
                 }
@@ -211,10 +234,19 @@ namespace TowTruck
                     Vehicle VehicleA = null;
                     try { VehicleA = Controller.Metadata.VehicleA; }
                     catch (Exception) { return false; }
+
+
                     Controller.Extras(5).Enabled = true;
+                    Controller.FreezePosition = true;
+                    VehicleA.FreezePosition = true;
                     GTA.Native.Function.Call("DETACH_CAR", VehicleA);
                     Controller.Metadata.VehicleA = null;
-                    VehicleA.PlaceOnGroundProperly();
+                    VehicleA.FreezePosition = false;
+                    Controller.FreezePosition = false;
+
+                    VehicleA.HazardLightsOn = true;
+                    Wait(100);
+                    VehicleA.HazardLightsOn = false;
                     return true;
                 }
             }
