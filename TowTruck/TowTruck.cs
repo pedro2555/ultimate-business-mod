@@ -68,7 +68,6 @@ namespace TowTruck
             // Imediatly making sure the player is not to far away with a controller on hand
             if (Controller != null && Player.Character.Position.DistanceTo(Controller.Position) > 30)
             {
-                Game.DisplayText("Killed 1", 1000);
                 Controller.Extras(5).Enabled = false;
                 Controller = null;
                 ControllerBlip.Delete();
@@ -79,7 +78,6 @@ namespace TowTruck
                 // Check if player got back to the Tow Truck and remove the controller from hand
                 if (Controller != null && Player.Character.CurrentVehicle == Controller && Player.Character.CurrentVehicle.Speed > 1)
                 {
-                    Game.DisplayText("Killed 1", 1000);
                     Controller.Extras(5).Enabled = false;
                     Controller = null;
                     ControllerBlip.Delete();
