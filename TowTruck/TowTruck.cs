@@ -72,6 +72,7 @@ namespace TowTruck
             // Imediatly making sure the player is not to far away with a controller on hand
             if (Controller != null && Player.Character.Position.DistanceTo(Controller.Position) > 30)
             {
+                Controller.HazardLightsOn = false;
                 Controller.Extras(5).Enabled = false;
                 Controller = null;
                 ControllerBlip.Delete();
@@ -82,6 +83,7 @@ namespace TowTruck
                 // Check if player got back to the Tow Truck and remove the controller from hand
                 if (Controller != null && Player.Character.CurrentVehicle == Controller && Player.Character.CurrentVehicle.Speed > 1)
                 {
+                    Controller.HazardLightsOn = false;
                     Controller.Extras(5).Enabled = false;
                     Controller = null;
                     ControllerBlip.Delete();
@@ -91,6 +93,7 @@ namespace TowTruck
                 if (Player.Character.CurrentVehicle.Speed < 0.025 && Player.Character.CurrentVehicle.CurrentRPM < 0.21 && Player.Character.CurrentVehicle.Model.Hash == 569305213 && Game.isGameKeyPressed(GameKey.Action) && Controller == null)
                 {
                     Controller = Player.Character.CurrentVehicle;
+                    Controller.HazardLightsOn = true;
                     ControllerBlip = Controller.AttachBlip();
                     ControllerBlip.Color = BlipColor.Yellow;
                     ControllerBlip.Display = BlipDisplay.ArrowOnly;
